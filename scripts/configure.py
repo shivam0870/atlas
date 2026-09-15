@@ -1,0 +1,27 @@
+"""Generate local-only credentials without writing them to logs or source control."""
+
+import os
+import secrets
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+path = root / ".env"
+if not path.exists():
+    admin, app = secrets.token_hex(24), secrets.token_hex(24)
+    values = {
+        "POSTGRES_PASSWORD": admin,
+        "APP_DB_PASSWORD": app,
+        "DATABASE_ADMIN_URL": f"postgresql://atlas_admin:{admin}@127.0.0.1:55432/atlas",
+        "DATABASE_URL": f"postgresql://atlas_app:{app}@127.0.0.1:55432/atlas",
+        "REDIS_URL": "redis://127.0.0.1:56379/0",
+        "LOCAL_CONSOLE": "true",
+        "PAID_PROVIDERS_ENABLED": "false",
+        "GLOBAL_PAID_SPEND_LIMIT_USD": "0",
+        "OTEL_ENABLED": "false",
+    }
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as out:
+        out.write("\n".join(f"{k}={v}" for k, v in values.items()) + "\n")
+    print("Created private local configuration in .env")
+else:
+    print("Existing .env preserved")

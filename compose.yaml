@@ -1,0 +1,62 @@
+name: atlas-rag
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.2-pg16
+    environment:
+      POSTGRES_USER: atlas_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/configure.py}
+      POSTGRES_DB: atlas
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas_admin -d atlas"]
+      interval: 3s
+      retries: 20
+  redis:
+    image: redis:8.2.1-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:56379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 20
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes: ["./infra/otel/collector.yaml:/etc/otel/config.yaml:ro"]
+    ports: ["127.0.0.1:54318:4318"]
+  migrate:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_ADMIN_URL: postgresql://atlas_admin:${POSTGRES_PASSWORD}@postgres:5432/atlas
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
+      REDIS_URL: redis://redis:6379/0
+      LOCAL_CONSOLE: "false"
+      OTEL_ENABLED: "true"
+      OTEL_ENDPOINT: http://collector:4318/v1/traces
+    ports: ["127.0.0.1:8100:8100"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  worker:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
+      REDIS_URL: redis://redis:6379/0
+    command: ["python", "-m", "atlas.worker"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+volumes:
+  postgres_data:
+  redis_data:
