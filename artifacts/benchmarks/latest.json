@@ -1,0 +1,53 @@
+{
+  "executed_at": "2026-09-15T16:34:22.459981+00:00",
+  "machine": "macOS-26.5.2-arm64-arm-64bit",
+  "processor": "Apple M1 Pro",
+  "memory_bytes": 17179869184,
+  "local_model": "qwen3:4b-instruct-2507-q4_K_M",
+  "duration_note": "30-second query workloads; laptop characterization, not a production capacity claim",
+  "ledger_including_warmup": {
+    "requests": 584,
+    "input_tokens": "22560",
+    "output_tokens": "480",
+    "api_cost_usd": "0E-10"
+  },
+  "indexing": {
+    "documents": 40,
+    "chunks": 80,
+    "elapsed_seconds": 58.11130420793779,
+    "documents_per_minute": 41.300053969054936,
+    "includes": "HTTP submission, queue wait, chunking, embedding, publication; unique documents and empty tenant embedding cache"
+  },
+  "cached": {
+    "requests": 553,
+    "requests_per_second": 18.4325487211761,
+    "p50_ms": 52.255,
+    "p95_ms": 504.2557999999994,
+    "p99_ms": 1152.3452799999995,
+    "http_error_rate": 0,
+    "cache_hit_rate": 1,
+    "answer_failure_rate": 0,
+    "offered_requests_per_second": 20,
+    "dropped_iterations": 47
+  },
+  "uncached": {
+    "requests": 29,
+    "requests_per_second": 0.9332293694362233,
+    "p50_ms": 892.573,
+    "p95_ms": 2222.5195999999996,
+    "p99_ms": 2392.35472,
+    "http_error_rate": 0,
+    "cache_hit_rate": 0,
+    "answer_failure_rate": 0
+  },
+  "ingestion_http": {
+    "requests": 40,
+    "requests_per_second": 11.648301663057149,
+    "p50_ms": 95.367,
+    "p95_ms": 440.3399499999988,
+    "p99_ms": 1098.74957,
+    "http_error_rate": 0,
+    "cache_hit_rate": null,
+    "answer_failure_rate": null
+  }
+}

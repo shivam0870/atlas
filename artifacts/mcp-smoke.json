@@ -1,0 +1,19 @@
+[
+  {
+    "workspace": "Acme Engineering",
+    "tools": 3,
+    "records": [
+      "checkout",
+      "inventory"
+    ],
+    "search_passages": 3
+  },
+  {
+    "workspace": "Northstar Labs",
+    "tools": 3,
+    "records": [
+      "catalog"
+    ],
+    "search_passages": 1
+  }
+]

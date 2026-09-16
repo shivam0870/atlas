@@ -1,0 +1,11 @@
+{
+  "forced_primary": "connection_refused",
+  "recovered_backend": "llama.cpp",
+  "answer": "The release code is COPPER-FERN [1].",
+  "elapsed_seconds": 20.362,
+  "api_cost_usd": 0,
+  "type": "usage",
+  "input_tokens": 150,
+  "output_tokens": 12,
+  "backend": "llama.cpp"
+}

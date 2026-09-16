@@ -1,0 +1,14 @@
+{
+  "answer": "The checkout service uses 3 replicas [1]. The releases of the checkout service are approved by the Platform team and require the release approval code AMBER-ORCHID [2].",
+  "tools": [
+    "query_structured_data",
+    "search_documents"
+  ],
+  "source_kinds": [
+    "document",
+    "structured"
+  ],
+  "status": "completed",
+  "elapsed_seconds": 20.535,
+  "api_cost_usd": 0
+}

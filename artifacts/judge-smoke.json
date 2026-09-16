@@ -1,0 +1,18 @@
+{
+  "basis": "two deterministic synthetic claims; not a human calibration study",
+  "supported": {
+    "supported_claims": 1,
+    "total_claims": 1,
+    "reason": "The evidence states that 'The synthetic Juniper service runs with three replicas.' The answer claims 'Juniper runs with three replicas.' The term 'synthetic' is a modifier that does not alter the entity name 'Juniper,' and the evidence directly supports that the Juniper service runs with three replicas. Thus, the answer is supported by the evidence.",
+    "score": 1.0,
+    "calibrated": false
+  },
+  "unsupported": {
+    "supported_claims": 0,
+    "total_claims": 1,
+    "reason": "The evidence states that the synthetic Juniper service runs with three replicas, not eight. The answer claims eight replicas, which contradicts the evidence.",
+    "score": 0.0,
+    "calibrated": false
+  },
+  "api_cost_usd": 0
+}

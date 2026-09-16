@@ -1,0 +1,62 @@
+{
+  "stats": {
+    "startTime": "2026-09-16T07:00:39.017Z",
+    "duration": 97368.14,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "workspace overview, source preview, navigation and responsive layout",
+      "status": "expected",
+      "runs": [
+        {
+          "status": "passed",
+          "duration_ms": 8290
+        }
+      ]
+    },
+    {
+      "title": "live streamed answer includes correct tenant-private evidence",
+      "status": "expected",
+      "runs": [
+        {
+          "status": "passed",
+          "duration_ms": 17936
+        }
+      ]
+    },
+    {
+      "title": "upload raw text, inspect source and remove it",
+      "status": "expected",
+      "runs": [
+        {
+          "status": "passed",
+          "duration_ms": 3107
+        }
+      ]
+    },
+    {
+      "title": "file upload is indexed and answers a new question with its source",
+      "status": "expected",
+      "runs": [
+        {
+          "status": "passed",
+          "duration_ms": 55341
+        }
+      ]
+    },
+    {
+      "title": "switching workspaces cancels an active answer and clears its state",
+      "status": "expected",
+      "runs": [
+        {
+          "status": "passed",
+          "duration_ms": 3369
+        }
+      ]
+    }
+  ]
+}

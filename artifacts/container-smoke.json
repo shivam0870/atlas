@@ -1,0 +1,14 @@
+{
+  "status": "partial",
+  "image_build": "passed",
+  "runtime_user": "atlas (non-root)",
+  "health": true,
+  "readiness": true,
+  "packaged_ui": true,
+  "authenticated_tenant": true,
+  "host_inference_connectivity": true,
+  "uncached_query": "failed: HTTP client read timeout after 180 seconds",
+  "environment": "Shared Colima VM: 2 CPUs, 2 GiB RAM; native Ollama via host.lima.internal",
+  "limitation": "Container query completion is unverified. The temporary test containers were stopped after the VM became unresponsive. Native browser and API validation are recorded separately.",
+  "api_cost_usd": 0
+}

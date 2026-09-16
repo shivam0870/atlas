@@ -1,0 +1,707 @@
+{
+  "executed_at": "2026-09-15T12:46:08.663902+00:00",
+  "basis": "12 programmatically authored synthetic fixtures; not human-reviewed Kubernetes corpus quality",
+  "api_cost_usd": 0,
+  "results": [
+    {
+      "config": {
+        "chunk_size": 600,
+        "mode": "hybrid",
+        "rerank": false,
+        "top_k": 5
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 47.001541941426694,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 39.237207965925336,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 40.333708049729466,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 47.183374990709126,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 40.32466700300574,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 46.06304201297462,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 53.54016600176692,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 57.04433296341449,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 40.711875073611736,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 36.03858291171491,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 37.32004191260785,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 42.83804097212851,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        }
+      ],
+      "metrics": {
+        "milliseconds": 43.96971514991795,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.0
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1000,
+        "mode": "hybrid",
+        "rerank": false,
+        "top_k": 5
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 45.25958304293454,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 37.781166029162705,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 36.53766599018127,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 44.554791995324194,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 49.546207999810576,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 54.97929104603827,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 49.31216698605567,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 68.40291700791568,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 45.39983405265957,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 54.594250046648085,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 105.43462494388223,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 44.58629200235009,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        }
+      ],
+      "metrics": {
+        "milliseconds": 53.032399261913575,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.0
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1400,
+        "mode": "hybrid",
+        "rerank": false,
+        "top_k": 5
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 40.13254097662866,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 36.21412499342114,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 36.34245798457414,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 36.17149998899549,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 36.31999995559454,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 37.964832969009876,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 41.45250003784895,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 41.19587503373623,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 41.39695793855935,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 38.68899994995445,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 39.40904198680073,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 36.80004202760756,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        }
+      ],
+      "metrics": {
+        "milliseconds": 38.50740615356093,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.0
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1000,
+        "mode": "vector",
+        "rerank": false,
+        "top_k": 5
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 38.200250011868775,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.8503449055347546
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 47.24712495226413,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 50.45470898039639,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 38.07749995030463,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 34.287791000679135,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 34.66137498617172,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 31.497166957706213,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 33.747749985195696,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 32.77333406731486,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 32.81766700092703,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 36.53520892839879,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 42.87300002761185,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.9197207891481876
+        }
+      ],
+      "metrics": {
+        "milliseconds": 37.76440640406994,
+        "recall_at_5": 0.7916666666666666,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.8196501382091862
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1000,
+        "mode": "hybrid",
+        "rerank": true,
+        "top_k": 5
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 654.8819580348209,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 298.7166669918224,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 366.3336669560522,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 277.4969580350444,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 274.74337501917034,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 280.7062080828473,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 291.0123330075294,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 346.2744160788134,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 304.3867499800399,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 317.94412492308766,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 491.09341704752296,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 455.6748339673504,
+          "recall_at_5": 0.5,
+          "mrr": 1.0,
+          "ndcg_at_5": 0.6131471927654584
+        }
+      ],
+      "metrics": {
+        "milliseconds": 363.27205901034176,
+        "recall_at_5": 0.5,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.6131471927654584
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1000,
+        "mode": "hybrid",
+        "rerank": false,
+        "top_k": 3
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 51.87291698530316,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 48.44566609244794,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 61.68854201678187,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 55.94808398745954,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 59.38354099635035,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 58.64095804281533,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 57.87362495902926,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 64.16175002232194,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 46.93416599184275,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 51.01079202722758,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 45.025958912447095,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 51.22862500138581,
+          "recall_at_3": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_3": 1.0
+        }
+      ],
+      "metrics": {
+        "milliseconds": 54.35121875295105,
+        "recall_at_3": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_3": 1.0
+      }
+    },
+    {
+      "config": {
+        "chunk_size": 1000,
+        "mode": "hybrid",
+        "rerank": false,
+        "top_k": 8
+      },
+      "queries": [
+        {
+          "question": "What is the release approval code for cedar-00?",
+          "milliseconds": 42.159499949775636,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-01?",
+          "milliseconds": 51.416957983747125,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-02?",
+          "milliseconds": 54.942959104664624,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-03?",
+          "milliseconds": 52.552249981090426,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-04?",
+          "milliseconds": 53.73533396050334,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-05?",
+          "milliseconds": 57.25333408918232,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-06?",
+          "milliseconds": 59.76333294529468,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-07?",
+          "milliseconds": 46.80266696959734,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-08?",
+          "milliseconds": 48.04875003173947,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-09?",
+          "milliseconds": 49.54195790924132,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-10?",
+          "milliseconds": 49.87754195462912,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the release approval code for cedar-11?",
+          "milliseconds": 63.844417105428874,
+          "recall_at_8": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_8": 1.0
+        }
+      ],
+      "metrics": {
+        "milliseconds": 52.49491683207452,
+        "recall_at_8": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_8": 1.0
+      }
+    }
+  ]
+}

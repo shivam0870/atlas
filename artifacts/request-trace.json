@@ -1,0 +1,199 @@
+{
+  "basis": "actual exported final local agent request; HTTP span covers the complete streamed response",
+  "trace_id": "bc094fd47ec0d6d70c479554ec628e7b",
+  "spans": [
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "02cbe8e1a5db7d1f",
+      "parentSpanId": "",
+      "flags": 256,
+      "name": "POST request",
+      "kind": 1,
+      "startTimeUnixNano": "1789542186078516000",
+      "endTimeUnixNano": "1789542206502027000",
+      "attributes": [
+        {
+          "key": "request.id",
+          "value": {
+            "stringValue": "657ed352-7681-47a2-848c-ac4844f01f19"
+          }
+        },
+        {
+          "key": "http.response.status_code",
+          "value": {
+            "intValue": "200"
+          }
+        },
+        {
+          "key": "http.response.duration_ms",
+          "value": {
+            "doubleValue": 20428.840375039726
+          }
+        }
+      ],
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "c083688c3f6d83ec",
+      "parentSpanId": "02cbe8e1a5db7d1f",
+      "flags": 256,
+      "name": "query",
+      "kind": 1,
+      "startTimeUnixNano": "1789542186285129000",
+      "endTimeUnixNano": "1789542206146885000",
+      "attributes": [
+        {
+          "key": "tenant.id",
+          "value": {
+            "stringValue": "d572456c-65ac-4f40-8632-edb885e32962"
+          }
+        },
+        {
+          "key": "request.id",
+          "value": {
+            "stringValue": "657ed352-7681-47a2-848c-ac4844f01f19"
+          }
+        },
+        {
+          "key": "cache.hit",
+          "value": {
+            "boolValue": false
+          }
+        },
+        {
+          "key": "usage.api_cost_usd",
+          "value": {
+            "doubleValue": 0
+          }
+        },
+        {
+          "key": "query.status",
+          "value": {
+            "stringValue": "completed"
+          }
+        },
+        {
+          "key": "usage.input_tokens",
+          "value": {
+            "intValue": "2492"
+          }
+        },
+        {
+          "key": "usage.output_tokens",
+          "value": {
+            "intValue": "176"
+          }
+        },
+        {
+          "key": "usage.reconciled",
+          "value": {
+            "boolValue": true
+          }
+        }
+      ],
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "2cb473bbeaff8a80",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "agent.plan",
+      "kind": 1,
+      "startTimeUnixNano": "1789542187400760000",
+      "endTimeUnixNano": "1789542191803996000",
+      "attributes": [
+        {
+          "key": "agent.step",
+          "value": {
+            "intValue": "0"
+          }
+        }
+      ],
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "8a4273d37e8f125a",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "agent.tool.query_structured_data",
+      "kind": 1,
+      "startTimeUnixNano": "1789542191814023000",
+      "endTimeUnixNano": "1789542191857674000",
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "07fe5e68d3b68aee",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "agent.plan",
+      "kind": 1,
+      "startTimeUnixNano": "1789542191858561000",
+      "endTimeUnixNano": "1789542193857501000",
+      "attributes": [
+        {
+          "key": "agent.step",
+          "value": {
+            "intValue": "1"
+          }
+        }
+      ],
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "5890f29aeb11773f",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "agent.tool.search_documents",
+      "kind": 1,
+      "startTimeUnixNano": "1789542193861050000",
+      "endTimeUnixNano": "1789542195781437000",
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "1b0e9f8a89d9960e",
+      "parentSpanId": "5890f29aeb11773f",
+      "flags": 256,
+      "name": "retrieve",
+      "kind": 1,
+      "startTimeUnixNano": "1789542195238747000",
+      "endTimeUnixNano": "1789542195781047000",
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "2001597e57fad940",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "agent.plan",
+      "kind": 1,
+      "startTimeUnixNano": "1789542195783847000",
+      "endTimeUnixNano": "1789542197943043000",
+      "attributes": [
+        {
+          "key": "agent.step",
+          "value": {
+            "intValue": "2"
+          }
+        }
+      ],
+      "status": {}
+    },
+    {
+      "traceId": "bc094fd47ec0d6d70c479554ec628e7b",
+      "spanId": "abd94ce975560d44",
+      "parentSpanId": "c083688c3f6d83ec",
+      "flags": 256,
+      "name": "generate",
+      "kind": 1,
+      "startTimeUnixNano": "1789542197954533000",
+      "endTimeUnixNano": "1789542206146620000",
+      "status": {}
+    }
+  ]
+}
