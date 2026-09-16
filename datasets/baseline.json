@@ -1,0 +1,6 @@
+{
+  "status": "pending_human_review",
+  "recall_at_5": null,
+  "source_run": null,
+  "note": "Accept a threshold from a completed human-reviewed development run. Never infer a threshold from unreviewed labels."
+}

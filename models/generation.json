@@ -1,0 +1,8 @@
+{
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "source": "Ollama library",
+  "gguf_digest": "sha256:85e4a5b7b8ef0e48af0e8658f5aaab9c2324c76c1641493f4d1e25fce54b18b9",
+  "quantization": "Q4_K_M",
+  "context": 8192,
+  "output_limit": 640
+}

@@ -5,36 +5,9 @@ import httpx
 import psycopg
 import pytest
 
-from atlas.auth import digest
 from atlas.config import settings
 from atlas.db import transaction
 from atlas.main import app
-
-
-@pytest.fixture
-def tenants():
-    ids = [uuid4(), uuid4()]
-    keys = ["atl_" + secrets.token_urlsafe(32) for _ in ids]
-    with psycopg.connect(settings.database_admin_url) as conn:
-        for tenant, key in zip(ids, keys, strict=True):
-            conn.execute(
-                "INSERT INTO atlas.tenants(id,slug,name) VALUES(%s,%s,%s)",
-                (tenant, str(tenant), "Isolation test"),
-            )
-            conn.execute(
-                "INSERT INTO atlas.api_keys(id,tenant_id,digest,prefix,scopes) VALUES(%s,%s,%s,%s,%s)",
-                (uuid4(), tenant, digest(key), key[:10], ["read"]),
-            )
-            conn.execute(
-                "INSERT INTO atlas.documents(tenant_id,id,title,source_key,content_hash,content) VALUES(%s,%s,'private','private','hash','private')",
-                (tenant, uuid4()),
-            )
-    yield ids, keys
-    with psycopg.connect(settings.database_admin_url) as conn:
-        for tenant in ids:
-            conn.execute("DELETE FROM atlas.documents WHERE tenant_id=%s", (tenant,))
-            conn.execute("DELETE FROM atlas.api_keys WHERE tenant_id=%s", (tenant,))
-            conn.execute("DELETE FROM atlas.tenants WHERE id=%s", (tenant,))
 
 
 @pytest.mark.integration

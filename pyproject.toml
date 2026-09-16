@@ -8,6 +8,8 @@ dependencies = [
   "psycopg[binary,pool]>=3.2,<4", "pgvector>=0.3,<1", "alembic>=1.14,<2",
   "sqlalchemy>=2,<3", "redis>=5,<9", "httpx>=0.28,<1",
   "opentelemetry-sdk>=1.30,<2", "opentelemetry-exporter-otlp-proto-http>=1.30,<2",
+  "sentence-transformers>=3,<7", "torch>=2,<3", "ollama>=0.6,<1", "python-multipart>=0.0.20,<1",
+  "langgraph>=1,<2", "mcp>=1.9,<3",
 ]
 
 [dependency-groups]
@@ -28,6 +30,10 @@ line-length = 100
 select = ["E", "F", "I", "UP", "B", "ASYNC"]
 ignore = ["E501", "B008"]
 
+[tool.ruff.lint.per-file-ignores]
+# One-shot administrative scripts can synchronously read their local manifests.
+"scripts/*" = ["ASYNC240"]
+
 [tool.mypy]
 python_version = "3.12"
 check_untyped_defs = true
@@ -40,3 +46,12 @@ asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
 markers = ["integration: real PostgreSQL and Redis required", "model: local model required"]
+
+# Linux containers use CPU wheels; macOS uses the native PyPI wheel.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
