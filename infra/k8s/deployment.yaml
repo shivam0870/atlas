@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlas-api
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: atlas-api}
+  template:
+    metadata:
+      labels: {app: atlas-api}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001}
+      initContainers:
+        - name: models
+          image: atlas-rag-api:latest
+          imagePullPolicy: IfNotPresent
+          command: [python, scripts/download_models.py]
+          envFrom: [{configMapRef: {name: atlas-config}}]
+          volumeMounts:
+            - {name: models, mountPath: /app/.models}
+            - {name: temporary, mountPath: /tmp}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          resources: {requests: {cpu: 250m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+      containers:
+        - name: api
+          image: atlas-rag-api:latest
+          imagePullPolicy: IfNotPresent
+          args: [uvicorn, 'atlas.main:app', --host, 0.0.0.0, --port, '8100', --no-access-log, --timeout-graceful-shutdown, '30']
+          ports: [{containerPort: 8100, name: http}]
+          envFrom: [{configMapRef: {name: atlas-config}}, {secretRef: {name: atlas-api}}]
+          readinessProbe: {httpGet: {path: /ready, port: http}, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health, port: http}, periodSeconds: 15}
+          startupProbe: {httpGet: {path: /health, port: http}, periodSeconds: 3, failureThreshold: 30}
+          resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 3Gi}}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: models, mountPath: /app/.models, readOnly: true}
+            - {name: temporary, mountPath: /tmp}
+      volumes:
+        - {name: models, emptyDir: {sizeLimit: 2Gi}}
+        - {name: temporary, emptyDir: {sizeLimit: 1Gi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlas-worker
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: atlas-worker}
+  template:
+    metadata:
+      labels: {app: atlas-worker}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 330
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001}
+      initContainers:
+        - name: models
+          image: atlas-rag-api:latest
+          imagePullPolicy: IfNotPresent
+          command: [python, scripts/download_models.py]
+          envFrom: [{configMapRef: {name: atlas-config}}]
+          volumeMounts: [{name: models, mountPath: /app/.models}, {name: temporary, mountPath: /tmp}]
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      containers:
+        - name: worker
+          image: atlas-rag-api:latest
+          imagePullPolicy: IfNotPresent
+          command: [python, -m, atlas.worker]
+          envFrom: [{configMapRef: {name: atlas-config}}, {secretRef: {name: atlas-worker}}]
+          resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 3Gi}}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts: [{name: models, mountPath: /app/.models, readOnly: true}, {name: temporary, mountPath: /tmp}]
+      volumes:
+        - {name: models, emptyDir: {sizeLimit: 2Gi}}
+        - {name: temporary, emptyDir: {sizeLimit: 1Gi}}

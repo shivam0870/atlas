@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atlas-config
+  namespace: atlas
+data:
+  REDIS_URL: redis://redis:6379/0
+  CACHE_REDIS_URL: redis://cache:6379/0
+  OLLAMA_URL: http://ollama:11434
+  LOCAL_CONSOLE: "false"
+  PAID_PROVIDERS_ENABLED: "false"
+  GLOBAL_PAID_SPEND_LIMIT_USD: "0"
+  OTEL_ENABLED: "true"
+  OTEL_ENDPOINT: http://collector:4318/v1/traces
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  HF_HOME: /tmp/huggingface

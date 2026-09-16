@@ -25,3 +25,24 @@ if not path.exists():
     print("Created private local configuration in .env")
 else:
     print("Existing .env preserved")
+existing = dict(
+    line.split("=", 1)
+    for line in path.read_text().splitlines()
+    if "=" in line and not line.startswith("#")
+)
+worker = existing.get("WORKER_DB_PASSWORD", secrets.token_hex(24))
+additions = {
+    "LOCAL_UID": str(os.getuid()),
+    "WORKER_DB_PASSWORD": worker,
+    "WORKER_DATABASE_URL": f"postgresql://atlas_worker:{worker}@127.0.0.1:55432/atlas",
+    "CACHE_REDIS_URL": "redis://127.0.0.1:56380/0",
+}
+with path.open("a") as out:
+    for key, value in additions.items():
+        if key not in existing:
+            out.write(f"{key}={value}\n")
+path.chmod(0o600)
+
+telemetry = root / ".local/telemetry"
+telemetry.mkdir(parents=True, exist_ok=True)
+telemetry.chmod(0o700)

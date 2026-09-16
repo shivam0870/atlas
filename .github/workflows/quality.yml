@@ -1,0 +1,46 @@
+name: Reviewed retrieval regression gate
+on:
+  workflow_dispatch:
+  push:
+    paths: ['src/**', 'datasets/**', 'models/**', 'uv.lock', '.github/workflows/quality.yml']
+  pull_request:
+    paths: ['src/**', 'datasets/**', 'models/**', 'uv.lock', '.github/workflows/quality.yml']
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    outputs:
+      accepted: ${{ steps.check.outputs.accepted }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          python3 - <<'PY'
+          import json,os
+          baseline=json.load(open('datasets/baseline.json'))
+          accepted=baseline.get('status')=='accepted' and baseline.get('recall_at_5') is not None and bool(baseline.get('source_run'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write('accepted='+str(accepted).lower()+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out: out.write('Reviewed corpus regression: '+('enabled' if accepted else 'SKIPPED — human reviews and an accepted measured baseline are still required')+'\n')
+          PY
+  retrieval:
+    needs: baseline
+    if: needs.baseline.outputs.accepted == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.5'}
+      - run: python3 scripts/configure.py
+      - run: uv sync --locked
+      - run: docker compose up -d postgres redis cache
+      - run: uv run alembic upgrade head
+      - run: uv run python -m atlas.cli tenant 'Acme Engineering' acme
+      - run: uv run python scripts/download_models.py
+      - run: uv run python scripts/seed_corpus.py
+      - run: uv run python scripts/import_reviewed_labels.py
+      - run: uv run python scripts/evaluate.py --gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-retrieval-results
+          path: artifacts/evaluation

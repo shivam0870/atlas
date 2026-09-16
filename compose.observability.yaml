@@ -1,0 +1,21 @@
+services:
+  collector:
+    volumes: ["./infra/otel/collector-observability.yaml:/etc/otel/config.yaml:ro"]
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes: ["./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["127.0.0.1:59090:9090"]
+  tempo:
+    image: grafana/tempo:2.8.2
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes: ["./infra/tempo/tempo.yaml:/etc/tempo.yaml:ro"]
+  grafana:
+    image: grafana/grafana:12.1.1
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    ports: ["127.0.0.1:53000:3000"]
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/atlas.json:/var/lib/grafana/dashboards/atlas.json:ro

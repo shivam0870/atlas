@@ -6,57 +6,158 @@ services:
       POSTGRES_USER: atlas_admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/configure.py}
       POSTGRES_DB: atlas
-    ports: ["127.0.0.1:55432:5432"]
-    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    ports:
+    - 127.0.0.1:55432:5432
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U atlas_admin -d atlas"]
+      test:
+      - CMD-SHELL
+      - pg_isready -U atlas_admin -d atlas
       interval: 3s
       retries: 20
   redis:
     image: redis:8.2.1-alpine
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
-    ports: ["127.0.0.1:56379:6379"]
-    volumes: ["redis_data:/data"]
+    command:
+    - redis-server
+    - --appendonly
+    - 'yes'
+    - --maxmemory-policy
+    - noeviction
+    ports:
+    - 127.0.0.1:56379:6379
+    volumes:
+    - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      interval: 3s
+      retries: 20
+  cache:
+    image: redis:8.2.1-alpine
+    command:
+    - redis-server
+    - --maxmemory
+    - 128mb
+    - --maxmemory-policy
+    - allkeys-lru
+    ports:
+    - 127.0.0.1:56380:6379
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 3s
       retries: 20
   collector:
     image: otel/opentelemetry-collector-contrib:0.123.0
-    command: ["--config=/etc/otel/config.yaml"]
-    volumes: ["./infra/otel/collector.yaml:/etc/otel/config.yaml:ro"]
-    ports: ["127.0.0.1:54318:4318"]
+    command:
+    - --config=/etc/otel/config.yaml
+    volumes:
+    - ./infra/otel/collector.yaml:/etc/otel/config.yaml:ro
+    - ./.local/telemetry:/telemetry
+    ports:
+    - 127.0.0.1:54318:4318
+    - 127.0.0.1:59464:9464
+    tmpfs:
+    - /tmp:rw,mode=1777,size=32m
+    user: ${LOCAL_UID:-10001}
   migrate:
     build: .
     env_file: .env
     environment:
       DATABASE_ADMIN_URL: postgresql://atlas_admin:${POSTGRES_PASSWORD}@postgres:5432/atlas
-    command: ["alembic", "upgrade", "head"]
+    command:
+    - alembic
+    - upgrade
+    - head
     depends_on:
-      postgres: {condition: service_healthy}
+      postgres:
+        condition: service_healthy
   api:
     build: .
-    env_file: .env
     environment:
       DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
       REDIS_URL: redis://redis:6379/0
-      LOCAL_CONSOLE: "false"
-      OTEL_ENABLED: "true"
+      CACHE_REDIS_URL: redis://cache:6379/0
+      OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://ollama:11434}
+      LOCAL_CONSOLE: 'false'
+      OTEL_ENABLED: 'true'
       OTEL_ENDPOINT: http://collector:4318/v1/traces
-    ports: ["127.0.0.1:8100:8100"]
+    ports:
+    - 127.0.0.1:${ATLAS_API_PORT:-8100}:8100
+    volumes:
+    - model_data:/app/.models:ro
+    - console_data:/app/.local
     depends_on:
-      migrate: {condition: service_completed_successfully}
-      redis: {condition: service_healthy}
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      models:
+        condition: service_completed_successfully
+      cache:
+        condition: service_healthy
+      model-pull:
+        condition: service_completed_successfully
   worker:
+    stop_grace_period: 330s
     build: .
-    env_file: .env
     environment:
-      DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
+      WORKER_DATABASE_URL: postgresql://atlas_worker:${WORKER_DB_PASSWORD}@postgres:5432/atlas
       REDIS_URL: redis://redis:6379/0
-    command: ["python", "-m", "atlas.worker"]
+      CACHE_REDIS_URL: redis://cache:6379/0
+      OTEL_ENABLED: 'true'
+      OTEL_ENDPOINT: http://collector:4318/v1/traces
+    volumes:
+    - model_data:/app/.models:ro
+    - console_data:/app/.local
+    command:
+    - python
+    - -m
+    - atlas.worker
     depends_on:
-      migrate: {condition: service_completed_successfully}
-      redis: {condition: service_healthy}
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      models:
+        condition: service_completed_successfully
+      cache:
+        condition: service_healthy
+  ollama:
+    image: ollama/ollama:0.34.0
+    environment:
+      OLLAMA_NO_CLOUD: '1'
+      OLLAMA_NUM_PARALLEL: '1'
+      OLLAMA_CONTEXT_LENGTH: '8192'
+    volumes:
+    - ollama_data:/root/.ollama
+  models:
+    build: .
+    command:
+    - python
+    - scripts/download_models.py
+    volumes:
+    - model_data:/app/.models
+  model-pull:
+    image: ollama/ollama:0.34.0
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint:
+    - /bin/sh
+    - -c
+    command:
+    - until ollama list >/dev/null 2>&1; do sleep 1; done; ollama pull qwen3:4b-instruct-2507-q4_K_M
+    depends_on:
+      ollama:
+        condition: service_started
 volumes:
-  postgres_data:
-  redis_data:
+  model_data: null
+  console_data: null
+  ollama_data: null
+  postgres_data: null
+  redis_data: null
