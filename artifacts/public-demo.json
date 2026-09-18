@@ -1,0 +1,33 @@
+{
+  "url": "https://cavalry-habitable-sureness.ngrok-free.dev",
+  "authentication_fixture": "Locally provisioned isolated test account; real Gmail signup verification is tracked separately",
+  "checks": [
+    "Real public HTTPS login with Secure, HttpOnly, SameSite=Strict session",
+    "PDF upload through ngrok, real worker indexing, exact page references and original download",
+    "DOCX upload through ngrok, real worker indexing and original download",
+    "Switching company prevents source download even for a user owning both companies",
+    "Logout revokes the public session",
+    "Real browser login through public HTTPS",
+    "Actual browser upload form queued a document through the public endpoint",
+    "Real local-model answer streamed through ngrok, exact version citation opened, answer saved, follow-up generated and history survived refresh",
+    "Mobile conversation and evidence panel work through public HTTPS",
+    "Public document replacement indexed a new version while old download, source text and conversation stayed intact"
+  ],
+  "browser_result": "passed",
+  "generation_calls": 2,
+  "verified_at": "2026-09-18T16:57:25.952842+00:00",
+  "api_cost_usd": 0,
+  "real_email_signup": {
+    "smtp_tls_authentication": "passed",
+    "registration_email_send": "accepted",
+    "inbox_link_confirmation": "pending"
+  },
+  "backup": {
+    "dump_bytes": 250824,
+    "original_files": 4,
+    "hashes": "passed",
+    "private_configuration_permissions": "passed",
+    "public_instance_restore_rehearsal": "not run"
+  },
+  "availability": "Mac must remain awake and online; ngrok free-plan limits apply"
+}

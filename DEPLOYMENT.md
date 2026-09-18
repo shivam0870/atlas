@@ -1,39 +1,18 @@
 # Atlas deployment and resume demo
 
-Updated 18 September 2026. **Source published; static project showcase deployed. The interactive application is not publicly hosted yet.** Approved budget: **₹0**. Repository: [shivam0870/atlas](https://github.com/shivam0870/atlas). Showcase: [shivam0870.github.io/atlas](https://shivam0870.github.io/atlas/). No custom domain or paid resources were purchased.
+Updated 18 September 2026. **The interactive app is now exposed through HTTPS:** [Open Atlas](https://cavalry-habitable-sureness.ngrok-free.dev). The source is at [shivam0870/atlas](https://github.com/shivam0870/atlas), and the static showcase is at [shivam0870.github.io/atlas](https://shivam0870.github.io/atlas/).
 
-## Recommended ₹0 setup
+## Current ₹0 deployment
 
-| Part | Choice | Availability |
-|---|---|---|
-| Source and verification evidence | The supplied public GitHub repository | Published on `main` |
-| Resume showcase | GitHub Pages with screenshots, architecture and honest test results | Deployed at `https://shivam0870.github.io/atlas/`, independently of the Mac |
-| Full frontend and backend | Existing native Atlas runtime on the Mac, behind an ngrok free HTTPS endpoint | Requires the Mac awake, online and running Atlas and the tunnel |
-| Database, worker and local AI | A dedicated demo database/uploads and native local inference | No rented server or paid model API; existing computer, electricity and internet still required |
-| Email | Dedicated personal Gmail account, SMTP STARTTLS and an app password | Low-volume demo use; subject to account eligibility, sending limits and actual delivery verification |
+The real React frontend and FastAPI backend share one ngrok HTTPS origin. PostgreSQL, Redis, original files and local Qwen inference run on the existing Mac. The public instance has separate demo data and runtime configuration. The Mac must remain awake and online; the static showcase remains available independently.
 
-This is a recommendation pending confirmation that an online Mac is acceptable for live demos. It is not a claim that the complete application has free always-on cloud hosting. GitHub Pages serves the project showcase; it cannot run the Python API, database, background worker or model. [GitHub Pages availability](https://docs.github.com/en/pages/getting-started-with-github-pages).
+**[Public demo startup, backup, configuration and verification](PUBLIC_DEMO.md)** is the operating guide for this instance. Public upload, indexing, streamed answers, citations, follow-ups, mobile evidence and refresh checks passed. Gmail SMTP authentication and signup sending passed; the owner's inbox verification click remains pending. Public reset/invitation email clicks and a restore of this new demo backup have not been verified.
 
-The ngrok free plan includes a provider-assigned HTTPS development domain, 1 GB outbound transfer and 20,000 HTTP requests per month. Browser visitors see an initial ngrok warning page. These limits suit occasional supervised demos and must be checked against actual traffic. Streaming answers still need testing through the chosen endpoint. [Official free-plan limits](https://ngrok.com/docs/pricing-limits/free-plan-limits).
+No hosting purchase or paid model API was used. ngrok's free plan has usage limits and a browser welcome screen; it includes a provider-assigned HTTPS domain. [Current ngrok limits](https://ngrok.com/docs/pricing-limits/free-plan-limits). GitHub Pages serves the static project showcase. [GitHub Pages availability](https://docs.github.com/en/pages/getting-started-with-github-pages).
 
-### Account setup needed from the owner
+Source publication CI passed on product commit `86e87d6`: 89 backend tests (one model test deselected), 16 frontend tests and three real account/onboarding browser journeys. Public-native verification is separate from those hosted CI checks; see [release evidence](UPGRADE_RELEASE.md).
 
-1. **GitHub authentication completed.** The reviewed source and showcase were published after checking the current file set and all five prior commits against the secret-scanning baseline. Private configuration, models, database backups and local inbox data were excluded. Future authentication uses `gh auth login --hostname github.com --git-protocol https --web`; do not paste tokens into chat.
-2. If the Mac-based demo is acceptable, create a **free** [ngrok account](https://dashboard.ngrok.com/signup). Configure its authtoken privately through its documented setup, then share only the assigned public hostname. Account creation alone does not expose the Mac; start the endpoint only after the dedicated demo instance is ready.
-3. Create or choose a dedicated personal Gmail sender. Enable 2-Step Verification and create an Atlas-specific [Google app password](https://myaccount.google.com/apppasswords). Keep it in local private configuration, never in Git or chat. App passwords may be unavailable for some managed accounts or accounts with Advanced Protection. [Google requirements](https://support.google.com/accounts/answer/185833?hl=en).
-
-SMTP settings for the dedicated demo configuration are `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_STARTTLS=true`, with `SMTP_USERNAME` and `SMTP_FROM` set to the dedicated sender and `SMTP_PASSWORD` set to its app password. Atlas already supports these fields. Do not change the running development `.env` or publish its Mailpit inbox as a substitute for real delivery. [Google SMTP settings](https://support.google.com/mail/answer/7104828?hl=en).
-
-### Remaining work before a public demo
-
-- **Completed:** publish reviewed source and a static showcase. Pages deployment [35369073606](https://github.com/shivam0870/atlas/actions/runs/35369073606) succeeded; public HTTPS returned 200. Chrome checks of the deployed page at 1440px and 390px passed for the screenshot, layout, keyboard skip link, section navigation and disclosure controls, with no page errors. Backend CI runs separately from static publication.
-- **Completed:** [GitHub CI 35369073611](https://github.com/shivam0870/atlas/actions/runs/35369073611) passed on product commit `86e87d6`: 89 backend tests, 16 frontend tests, 3 real account/onboarding browser journeys, migrations, static checks and frontend build. One local-model test was deselected; the complete seven-journey local suite and inference evidence remain separate. The human-reviewed corpus gate remains pending.
-- Provision isolated demo data and original-file storage; keep private local data, database ports and the development inbox inaccessible from the tunnel.
-- Set the dedicated instance's `APP_URL` to its actual HTTPS origin before testing cookies and email links.
-- Verify actual SMTP delivery, signup/reset, streamed answers, citations and follow-ups through the public hostname from another network.
-- Record startup/shutdown and recovery instructions for the dedicated instance. Existing Docker server files below are an alternative for future server capacity, not the selected ₹0 Mac setup.
-
-## Recommended architecture
+## Future dedicated-server architecture
 
 Deploy the existing React frontend and FastAPI backend behind **one HTTPS address**. Atlas already serves `web/dist`; it does not need a separate frontend hosting service. Keep the frontend, `/api` and `/mcp` on the same origin to preserve the current cookie/session and CSRF design. Splitting providers is possible through an appropriate same-origin proxy, but is extra work for this release.
 
@@ -57,7 +36,7 @@ flowchart TD
 
 | Item | Why / decision |
 |---|---|
-| GitHub repository | Source and evidence link for the resume; this checkout currently has no Git remote |
+| GitHub repository | Source and evidence link for the resume; published at `shivam0870/atlas` |
 | Linux server or existing host | Runs the API, worker, database, Redis and local inference continuously |
 | Initial sizing | **Planning estimate: 4–8 vCPU, 16 GiB RAM, at least 80 GB SSD**, one generation at a time; benchmark on the actual host before promising latency/capacity |
 | Domain or subdomain | Stable HTTPS URL and account email links; Caddy terminates TLS |
@@ -150,4 +129,4 @@ Include a repository link, architecture diagram, screenshots, a short narrated d
 
 ## Current handoff
 
-The source and static resume showcase are public. The app is implemented and locally tested, with the container-inference limitation recorded above. **Interactive deployment is waiting on confirmation of Mac availability for live demos and tunnel/email account setup.** No custom-domain purchase is needed for the proposed free path. Publication has not changed the running local app, credentials or data.
+The source, static showcase and interactive ngrok endpoint are public. The endpoint uses the existing Mac and depends on its uptime. Public document-to-answer checks passed; inbox verification and public reset/invitation email clicks remain pending. See [PUBLIC_DEMO.md](PUBLIC_DEMO.md) for the exact operating procedure and limits. The Docker/Caddy files above remain candidates for a future sufficiently provisioned server.
