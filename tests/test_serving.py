@@ -109,9 +109,7 @@ async def test_concurrent_http_scope_expiry_and_permissions(database, tenants):
             "/api/documents/" + next(iter(rows[1])), headers={"Authorization": "Bearer " + keys[0]}
         )
         assert hidden.status_code == 404
-        csrf = await client.post(
-            "/api/local/connect/" + str(ids[0]), headers={"Origin": "https://attacker.example"}
-        )
+        csrf = await client.post("/api/auth/logout", headers={"Origin": "https://attacker.example"})
         assert csrf.status_code == 403
         with psycopg.connect(settings.database_admin_url) as conn:
             conn.execute(
@@ -190,7 +188,7 @@ async def test_no_evidence_abstains_without_generation(database, tenants, monkey
     assert row == {"reserved_tokens": 0, "used_tokens": 0}
 
 
-async def test_deletion_during_embedding_never_resurrects(database, tenants, monkeypatch):
+async def test_deletion_during_embedding_never_resurrects(worker_database, tenants, monkeypatch):
     from types import SimpleNamespace
 
     from atlas import ingestion

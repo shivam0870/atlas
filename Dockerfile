@@ -11,13 +11,12 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
-COPY src ./src
-RUN uv sync --frozen --no-dev --no-editable
 
 FROM python:3.12-slim-bookworm
 RUN useradd --create-home --uid 10001 atlas && mkdir -p /app/.local /app/.models && chown -R atlas:atlas /app
 WORKDIR /app
 COPY --from=build --chown=atlas:atlas /app/.venv /app/.venv
+COPY --chown=atlas:atlas src ./src
 COPY --from=console --chown=atlas:atlas /web/dist /app/web/dist
 COPY --chown=atlas:atlas migrations ./migrations
 COPY --chown=atlas:atlas scripts ./scripts
@@ -25,7 +24,7 @@ COPY --chown=atlas:atlas models ./models
 COPY --chown=atlas:atlas datasets ./datasets
 COPY --chown=atlas:atlas prompts ./prompts
 COPY --chown=atlas:atlas alembic.ini ./
-ENV PATH="/app/.venv/bin:$PATH" TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=4
+ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH="/app/src" TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=4
 USER atlas
 EXPOSE 8100
 HEALTHCHECK --interval=15s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"

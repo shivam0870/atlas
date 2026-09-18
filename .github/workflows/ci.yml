@@ -12,11 +12,30 @@ jobs:
       - run: python3 scripts/configure.py
       - run: uv sync --locked
       - run: uv run ruff check . && uv run ruff format --check . && uv run mypy src
-      - run: docker compose up -d postgres redis cache
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: web
+      - name: Check frontend formatting, components and production types
+        run: npm run format:check && npm run test:unit && npm run build
+        working-directory: web
+      - run: docker compose up -d --wait postgres redis cache mailpit
       - run: uv run alembic upgrade head
       - run: uv run pytest -m 'not model' -q
-      - run: npm ci && npm run build
+      - name: Install browser for real account journeys
+        run: npx playwright install --with-deps chrome
         working-directory: web
+      - name: Verify real account and onboarding browser journeys
+        run: |
+          mkdir -p artifacts/private
+          uv run uvicorn atlas.main:app --host 127.0.0.1 --port 8100 --no-access-log > artifacts/private/ci-api.log 2>&1 &
+          atlas_ci_pid=$!
+          trap 'kill "$atlas_ci_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8100/ready; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8100/ready
+          npm --prefix web run test:e2e -- e2e/upgrade-auth.spec.ts
 
       - name: Report corpus evaluation gate
         run: |

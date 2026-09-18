@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from uuid import UUID
 
+from maintenance import open_worker_pool
 from pydantic import BaseModel, Field
 
 from atlas.config import settings
@@ -24,7 +25,7 @@ async def main():
             if w["slug"] == "acme"
         )
     )
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         async with transaction(tenant) as conn:
             rows = await (

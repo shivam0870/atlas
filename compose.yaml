@@ -1,5 +1,15 @@
 name: atlas-rag
 services:
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports:
+    - 127.0.0.1:51025:1025
+    - 127.0.0.1:58025:8025
+    environment:
+      MP_MAX_MESSAGES: '200'
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+    - mailpit_data:/data
   postgres:
     image: pgvector/pgvector:0.8.2-pg16
     environment:
@@ -81,6 +91,11 @@ services:
     build: .
     environment:
       DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
+      IDENTITY_DATABASE_URL: postgresql://atlas_identity:${IDENTITY_DB_PASSWORD}@postgres:5432/atlas
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Run scripts/configure.py}
+      APP_URL: ${APP_URL:-http://127.0.0.1:8100}
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
       REDIS_URL: redis://redis:6379/0
       CACHE_REDIS_URL: redis://cache:6379/0
       OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://ollama:11434}
@@ -108,6 +123,10 @@ services:
     build: .
     environment:
       WORKER_DATABASE_URL: postgresql://atlas_worker:${WORKER_DB_PASSWORD}@postgres:5432/atlas
+      DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
+      IDENTITY_DATABASE_URL: postgresql://atlas_identity:${IDENTITY_DB_PASSWORD}@postgres:5432/atlas
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Run scripts/configure.py}
+      OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://ollama:11434}
       REDIS_URL: redis://redis:6379/0
       CACHE_REDIS_URL: redis://cache:6379/0
       OTEL_ENABLED: 'true'
@@ -156,6 +175,7 @@ services:
       ollama:
         condition: service_started
 volumes:
+  mailpit_data: null
   model_data: null
   console_data: null
   ollama_data: null

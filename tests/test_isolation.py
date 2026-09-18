@@ -6,7 +6,7 @@ import psycopg
 import pytest
 
 from atlas.config import settings
-from atlas.db import transaction
+from atlas.db import access_context, transaction
 from atlas.main import app
 
 
@@ -14,6 +14,7 @@ from atlas.main import app
 async def test_rls_without_application_filter(database, tenants):
     ids, _ = tenants
     for tenant in ids:
+        tenants.use(tenant)
         async with transaction(tenant) as conn:
             rows = await (await conn.execute("SELECT tenant_id FROM atlas.documents")).fetchall()
             assert rows and all(r["tenant_id"] == tenant for r in rows)
@@ -24,6 +25,9 @@ async def test_rls_without_application_filter(database, tenants):
             ).fetchone()
             assert not roles["rolsuper"] and not roles["rolbypassrls"]
     async with transaction() as conn:
+        assert await (await conn.execute("SELECT * FROM atlas.documents")).fetchall() == []
+    access_context.set(None)
+    async with transaction(ids[0]) as conn:
         assert await (await conn.execute("SELECT * FROM atlas.documents")).fetchall() == []
 
 

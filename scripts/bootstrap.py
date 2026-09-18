@@ -15,7 +15,7 @@ def run(*args):
 
 run("python3", "scripts/configure.py")
 run("uv", "sync", "--locked")
-run("docker-compose", "up", "-d", "postgres", "redis", "cache", "collector")
+run("docker-compose", "up", "-d", "postgres", "redis", "cache", "collector", "mailpit")
 run(".venv/bin/alembic", "upgrade", "head")
 workspaces = (
     json.loads(Path(".local/workspaces.json").read_text())
@@ -42,3 +42,5 @@ run(".venv/bin/python", "scripts/seed_corpus.py")
 run(".venv/bin/python", "scripts/seed_inventory.py")
 run(".venv/bin/python", "scripts/prepare_labels.py")
 print("Ready: http://127.0.0.1:8100")
+print("Register and verify your account using the local inbox at http://127.0.0.1:58025.")
+print("To administer a seeded workspace, use scripts/claim_workspace.py after verification.")

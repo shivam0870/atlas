@@ -1,0 +1,23 @@
+{
+  "result": "passed",
+  "image": "sha256:3294fb897ce309cc4af54a36a5e39d220a8c113c838c1ee490f98e0b4143f831",
+  "runtime_uid": 10001,
+  "checks": [
+    "health and database/queue readiness",
+    "exact final host-built HTML, real JavaScript asset and deep route",
+    "registration and local Mailpit verification",
+    "personal login with HttpOnly session cookie",
+    "company onboarding, tenant context and default knowledge space",
+    "logout invalidates authentication"
+  ],
+  "generation_calls": 0,
+  "api_cost_usd": 0,
+  "lead_verified_runtime_source_hashes_match": true,
+  "runtime_files_compared": [
+    "src/atlas/api.py",
+    "src/atlas/conversations.py",
+    "src/atlas/knowledge.py",
+    "src/atlas/retrieval.py",
+    "web/dist/index.html"
+  ]
+}

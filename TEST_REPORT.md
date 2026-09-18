@@ -1,5 +1,7 @@
 # Atlas verification report
 
+> This is the historical technical-release report. See [UPGRADE_RELEASE.md](UPGRADE_RELEASE.md) for the F01–F14 product upgrade and current executed verification.
+
 Executed locally on 15–16 September 2026. Reference environment: Apple M1 Pro, 16 GiB RAM, macOS 26.5.2; native Ollama; PostgreSQL/Redis/collector in a shared Colima VM with 2 CPUs and 2 GiB RAM. All generation and embedding use local models; external model API cost is zero.
 
 ## Result and scope

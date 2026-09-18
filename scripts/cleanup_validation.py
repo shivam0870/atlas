@@ -3,6 +3,7 @@
 import asyncio
 
 import psycopg
+from maintenance import open_worker_pool
 from psycopg.rows import dict_row
 
 from atlas.config import settings
@@ -12,7 +13,7 @@ from atlas.db import pool, transaction
 async def main():
     with psycopg.connect(settings.database_admin_url, row_factory=dict_row) as admin:
         tenant = admin.execute("SELECT id FROM atlas.tenants WHERE slug='acme'").fetchone()["id"]
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         async with transaction(tenant) as conn:
             await conn.execute(

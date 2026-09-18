@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-09-17T11:15:21.385904+00:00",
+  "checks": [
+    "Registration, Mailpit verification, login, company and restricted space creation",
+    "Real two-page PDF multipart upload, worker indexing, exact page offsets and original byte-for-byte download",
+    "Real DOCX multipart upload, worker indexing, paragraph/table references and original byte-for-byte download",
+    "Replacement publishes a distinct revision while historical preview/download remains immutable",
+    "Malformed and image-only PDFs return actionable 422 errors",
+    "Original download rejects unauthenticated requests"
+  ],
+  "generation_calls": 0,
+  "tenant_id": "de30114e-aef3-45c8-803a-cb0e4e0e55ec",
+  "space_id": "c9599df1-e938-42ae-9450-0cb61d4445e4",
+  "documents": {
+    "pdf": "3fa54cd7-01b4-4aa0-aef2-906912de1abc",
+    "docx": "8648c503-f432-42ff-9db4-ebfc1fa7a997"
+  },
+  "versions": {
+    "pdf_original": "d21259ec-b3a3-417e-bc6d-504dbc73d152",
+    "pdf_replacement": "e7cd6f8b-d75c-48c4-ba0d-8aa94f2c07be",
+    "docx": "e88f4cd6-1322-4686-8bc4-6665ed7106ad"
+  },
+  "sha256": {
+    "pdf_original": "8262f0a4c4ce6528d12a9e33a8f157617e1a588a721229e78fb159f245543900",
+    "pdf_replacement": "cc1006c80ab31c30a60bd99d40c557689e167ffa441932a93bb8acee1500a8e9",
+    "docx": "e9e1ccf269d4bc5277fd7621e0d8f5d108988055cbe1f4a3954a6173f3ecdc41"
+  },
+  "elapsed_seconds": 9.1,
+  "result": "passed"
+}

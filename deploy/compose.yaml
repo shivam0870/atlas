@@ -1,0 +1,163 @@
+name: atlas-public
+
+x-app: &app
+  image: ${ATLAS_IMAGE:?Build and select an Atlas release image}
+  restart: unless-stopped
+  init: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+
+x-runtime: &runtime
+  DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD:?Set a URL-safe password}@postgres:5432/atlas
+  IDENTITY_DATABASE_URL: postgresql://atlas_identity:${IDENTITY_DB_PASSWORD:?Set a URL-safe password}@postgres:5432/atlas
+  MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Retain this key with backups}
+  APP_URL: https://${ATLAS_DOMAIN:?Set the public hostname}
+  REDIS_URL: redis://redis:6379/0
+  CACHE_REDIS_URL: redis://cache:6379/0
+  OLLAMA_URL: http://ollama:11434
+  SMTP_HOST: ${SMTP_HOST:?Configure real SMTP delivery}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_FROM: ${SMTP_FROM:?Configure a verified sender}
+  SMTP_USERNAME: ${SMTP_USERNAME:?Configure SMTP credentials}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:?Configure SMTP credentials}
+  SMTP_STARTTLS: "true"
+  LOCAL_CONSOLE: "false"
+  PAID_PROVIDERS_ENABLED: "false"
+  GLOBAL_PAID_SPEND_LIMIT_USD: "0"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "2"
+  OTEL_ENABLED: "false"
+
+services:
+  proxy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    environment:
+      ATLAS_DOMAIN: ${ATLAS_DOMAIN:?Set the public hostname}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - tls_data:/data
+      - tls_config:/config
+    depends_on:
+      api: {condition: service_healthy}
+
+  postgres:
+    image: pgvector/pgvector:0.8.2-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atlas_admin
+      POSTGRES_DB: atlas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a URL-safe password}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U atlas_admin -d atlas"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:8.2.1-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, "yes", --maxmemory-policy, noeviction]
+    volumes: [queue_data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  cache:
+    image: redis:8.2.1-alpine
+    restart: unless-stopped
+    command: [redis-server, --maxmemory, 128mb, --maxmemory-policy, allkeys-lru]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ollama:
+    image: ollama/ollama:0.34.0
+    restart: unless-stopped
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_CONTEXT_LENGTH: "8192"
+    volumes: [generation_models:/root/.ollama]
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  migrate:
+    <<: *app
+    restart: "no"
+    environment:
+      DATABASE_ADMIN_URL: postgresql://atlas_admin:${POSTGRES_PASSWORD}@postgres:5432/atlas
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD:?Set a URL-safe password}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+    command: [alembic, upgrade, head]
+    healthcheck: {disable: true}
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  models:
+    <<: *app
+    restart: "no"
+    command: [python, scripts/download_models.py]
+    healthcheck: {disable: true}
+    volumes: [retrieval_models:/app/.models]
+
+  model-pull:
+    image: ollama/ollama:0.34.0
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_NO_CLOUD: "1"
+    command: [pull, "qwen3:4b-instruct-2507-q4_K_M"]
+    depends_on:
+      ollama: {condition: service_healthy}
+
+  api:
+    <<: *app
+    environment: *runtime
+    volumes: [retrieval_models:/app/.models:ro, uploads:/app/.local]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      models: {condition: service_completed_successfully}
+      model-pull: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      cache: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8100/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+
+  worker:
+    <<: *app
+    environment:
+      <<: *runtime
+      WORKER_DATABASE_URL: postgresql://atlas_worker:${WORKER_DB_PASSWORD}@postgres:5432/atlas
+    command: [python, -m, atlas.worker]
+    stop_grace_period: 330s
+    healthcheck: {disable: true}
+    volumes: [retrieval_models:/app/.models:ro, uploads:/app/.local]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      models: {condition: service_completed_successfully}
+      model-pull: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      cache: {condition: service_healthy}
+
+volumes:
+  postgres_data:
+  queue_data:
+  retrieval_models:
+  generation_models:
+  uploads:
+  tls_data:
+  tls_config:

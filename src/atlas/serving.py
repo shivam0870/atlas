@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from redis.asyncio import Redis
 
 from atlas.config import settings
-from atlas.db import transaction
+from atlas.db import access_context, transaction
 
 redis = Redis.from_url(settings.redis_url, decode_responses=True)
 cache_redis = Redis.from_url(settings.cache_redis_url, decode_responses=True)
@@ -55,6 +55,8 @@ async def rate_limit(tenant: UUID, maximum: int):
 
 async def reserve(tenant: UUID, operation: UUID, tokens=8832):
     period = datetime.now(UTC).date().replace(day=1)
+    actor = access_context.get()
+    user_id = actor.user_id if actor and actor.tenant_id == tenant else None
     async with transaction(tenant) as conn:
         row = await (
             await conn.execute(
@@ -83,10 +85,31 @@ async def reserve(tenant: UUID, operation: UUID, tokens=8832):
             raise HTTPException(402, "Monthly workspace token budget reached")
         if usage["spent_usd"] > row["monthly_usd"]:
             raise HTTPException(402, "Monthly workspace cost cap reached")
+        if user_id:
+            member = await (
+                await conn.execute(
+                    "SELECT monthly_tokens FROM atlas.memberships WHERE tenant_id=%s AND user_id=%s AND status='active'",
+                    (tenant, user_id),
+                )
+            ).fetchone()
+            if not member:
+                raise HTTPException(403, "Workspace membership is unavailable")
+            member_usage = await (
+                await conn.execute(
+                    "SELECT coalesce(sum(CASE WHEN status='settled' THEN coalesce(used_tokens,0) ELSE tokens END),0) n FROM atlas.reservations WHERE tenant_id=%s AND user_id=%s AND period=%s",
+                    (tenant, user_id, period),
+                )
+            ).fetchone()
+            assert member_usage is not None
+            if (
+                member["monthly_tokens"] is not None
+                and member_usage["n"] + tokens > member["monthly_tokens"]
+            ):
+                raise HTTPException(402, "Your monthly token budget has been reached")
         inserted = await (
             await conn.execute(
-                "INSERT INTO atlas.reservations(tenant_id,id,period,tokens) VALUES(%s,%s,%s,%s) ON CONFLICT DO NOTHING RETURNING id",
-                (tenant, operation, period, tokens),
+                "INSERT INTO atlas.reservations(tenant_id,id,period,tokens,user_id) VALUES(%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING RETURNING id",
+                (tenant, operation, period, tokens, user_id),
             )
         ).fetchone()
         if inserted:
@@ -117,8 +140,8 @@ async def settle(tenant: UUID, operation: UUID, used: int | None):
                 (row["tokens"], used, tenant, row["period"]),
             )
             await conn.execute(
-                "UPDATE atlas.reservations SET status='settled' WHERE tenant_id=%s AND id=%s",
-                (tenant, operation),
+                "UPDATE atlas.reservations SET status='settled',used_tokens=%s WHERE tenant_id=%s AND id=%s",
+                (used, tenant, operation),
             )
 
 
@@ -142,7 +165,7 @@ def cache_namespace(tenant, collection, revision, mode, top_k, rerank, scopes):
             ]
         ).encode()
     ).hexdigest()
-    return "atlas:answer:" + fingerprint
+    return f"atlas:answer:{tenant}:" + fingerprint
 
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -196,7 +219,15 @@ async def cache_store(
 async def enqueue_conn(conn, tenant: UUID, document_id: UUID, traceparent: str | None = None):
     from atlas.ingestion import pipeline_hash
 
-    key = str(document_id) + ":" + pipeline_hash()
+    document = await (
+        await conn.execute(
+            "SELECT coalesce(pending_version_id,current_version_id)::text version FROM atlas.documents WHERE tenant_id=%s AND id=%s",
+            (tenant, document_id),
+        )
+    ).fetchone()
+    if not document:
+        raise HTTPException(404, "Document unavailable")
+    key = str(document_id) + ":" + (document["version"] or "legacy") + ":" + pipeline_hash()
     await conn.execute("SELECT id FROM atlas.tenants WHERE id=%s FOR UPDATE", (tenant,))
     existing = await (
         await conn.execute(
@@ -227,10 +258,15 @@ async def enqueue_conn(conn, tenant: UUID, document_id: UUID, traceparent: str |
     assert row
     doc = await (
         await conn.execute(
-            "SELECT status FROM atlas.documents WHERE tenant_id=%s AND id=%s", (tenant, document_id)
+            "SELECT status,pending_version_id FROM atlas.documents WHERE tenant_id=%s AND id=%s",
+            (tenant, document_id),
         )
     ).fetchone()
-    if row["status"] in {"completed", "dead"} and doc and doc["status"] == "queued":
+    if (
+        row["status"] in {"completed", "dead"}
+        and doc
+        and (doc["status"] == "pending" or doc["pending_version_id"])
+    ):
         await conn.execute(
             "UPDATE atlas.ingestion_jobs SET status='queued',attempts=0,error_code=NULL WHERE tenant_id=%s AND id=%s",
             (tenant, row["id"]),

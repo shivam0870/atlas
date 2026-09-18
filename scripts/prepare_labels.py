@@ -6,13 +6,15 @@ import re
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from maintenance import open_worker_pool
+
 from atlas.db import pool, transaction
 
 
 async def main():
     workspaces = json.loads(Path(".local/workspaces.json").read_text())
     tenant = UUID(next(w["id"] for w in workspaces if w["slug"] == "acme"))
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         async with transaction(tenant) as conn:
             docs = await (

@@ -1,5 +1,6 @@
 """Generate local-only credentials without writing them to logs or source control."""
 
+import base64
 import os
 import secrets
 from pathlib import Path
@@ -31,11 +32,18 @@ existing = dict(
     if "=" in line and not line.startswith("#")
 )
 worker = existing.get("WORKER_DB_PASSWORD", secrets.token_hex(24))
+identity = existing.get("IDENTITY_DB_PASSWORD", secrets.token_hex(24))
 additions = {
     "LOCAL_UID": str(os.getuid()),
     "WORKER_DB_PASSWORD": worker,
     "WORKER_DATABASE_URL": f"postgresql://atlas_worker:{worker}@127.0.0.1:55432/atlas",
     "CACHE_REDIS_URL": "redis://127.0.0.1:56380/0",
+    "IDENTITY_DB_PASSWORD": identity,
+    "IDENTITY_DATABASE_URL": f"postgresql://atlas_identity:{identity}@127.0.0.1:55432/atlas",
+    "MFA_ENCRYPTION_KEY": base64.urlsafe_b64encode(secrets.token_bytes(32)).decode(),
+    "APP_URL": "http://127.0.0.1:8100",
+    "SMTP_HOST": "127.0.0.1",
+    "SMTP_PORT": "51025",
 }
 with path.open("a") as out:
     for key, value in additions.items():

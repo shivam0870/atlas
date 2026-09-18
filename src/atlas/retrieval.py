@@ -1,4 +1,5 @@
 import asyncio
+from datetime import UTC, datetime
 from functools import lru_cache
 from uuid import UUID
 
@@ -27,7 +28,15 @@ def reranker():
 
 
 async def retrieve(
-    tenant_id: UUID, question: str, top_k=5, mode="hybrid", rerank=False, size=None, overlap=None
+    tenant_id: UUID,
+    question: str,
+    top_k=5,
+    mode="hybrid",
+    rerank=False,
+    size=None,
+    overlap=None,
+    space_ids: list[UUID] | None = None,
+    document_ids: list[UUID] | None = None,
 ):
     coll = await collection(tenant_id, size, overlap)
     query_vector = (await embed([question], query=True))[0]
@@ -37,11 +46,13 @@ async def retrieve(
             vectors = await (
                 await conn.execute(
                     """
-                SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,
+                SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,d.updated_at document_updated_at,d.review_due_at,
                   1-(e.embedding <=> %s::vector) similarity
                 FROM atlas.chunks c JOIN atlas.embeddings e ON e.tenant_id=c.tenant_id AND e.chunk_id=c.id
                 JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
-                WHERE c.tenant_id=%s AND c.collection_id=%s AND e.model_revision=%s AND d.status='ready'
+                LEFT JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id
+                WHERE c.tenant_id=%s AND c.collection_id=%s AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id
+                AND (%s::uuid[] IS NULL OR d.space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR d.id=ANY(%s::uuid[]))
                 ORDER BY e.embedding <=> %s::vector LIMIT 20
             """,
                     (
@@ -49,6 +60,10 @@ async def retrieve(
                         tenant_id,
                         coll["id"],
                         model_revision(),
+                        space_ids,
+                        space_ids,
+                        document_ids,
+                        document_ids,
                         vector_literal(query_vector),
                     ),
                 )
@@ -62,7 +77,8 @@ async def retrieve(
                         """
                     WITH corpus AS MATERIALIZED (
                       SELECT c.* FROM atlas.chunks c JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
-                      WHERE c.tenant_id=%s AND c.collection_id=%s AND d.status='ready'
+                      WHERE c.tenant_id=%s AND c.collection_id=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id
+                      AND (%s::uuid[] IS NULL OR d.space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR d.id=ANY(%s::uuid[]))
                     ), stats AS (SELECT count(*)::float n,avg(token_count)::float avgdl FROM corpus),
                     terms AS (SELECT DISTINCT unnest(lexemes) term FROM ts_debug('english',%s)),
                     matches AS (
@@ -75,7 +91,16 @@ async def retrieve(
                     FROM matches m JOIN dfs d ON d.term=m.term CROSS JOIN stats s
                     GROUP BY m.chunk_id ORDER BY score DESC,m.chunk_id LIMIT 20
                 """,
-                        (tenant_id, coll["id"], question, tenant_id),
+                        (
+                            tenant_id,
+                            coll["id"],
+                            space_ids,
+                            space_ids,
+                            document_ids,
+                            document_ids,
+                            question,
+                            tenant_id,
+                        ),
                     )
                 ).fetchall()
             rows = {str(r["id"]): dict(r) for r in vectors}
@@ -83,11 +108,12 @@ async def retrieve(
             if extra:
                 additional = await (
                     await conn.execute(
-                        """SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,
+                        """SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,d.updated_at document_updated_at,d.review_due_at,
                   1-(e.embedding <=> %s::vector) similarity FROM atlas.chunks c
                   JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
                   JOIN atlas.embeddings e ON e.tenant_id=c.tenant_id AND e.chunk_id=c.id
-                  WHERE c.tenant_id=%s AND c.id=ANY(%s) AND e.model_revision=%s AND d.status='ready'""",
+                  LEFT JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id
+                  WHERE c.tenant_id=%s AND c.id=ANY(%s) AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id""",
                         (vector_literal(query_vector), tenant_id, extra, model_revision()),
                     )
                 ).fetchall()
@@ -99,6 +125,8 @@ async def retrieve(
             settings.vector_weight,
             settings.lexical_weight,
         )
+        vector_ranks = {str(row["id"]): rank for rank, row in enumerate(vectors, 1)}
+        lexical_ranks = {str(row["id"]): rank for rank, row in enumerate(lexical, 1)}
         ordered = sorted(rows.values(), key=lambda r: (-scores[str(r["id"])], str(r["id"])))
         if rerank and ordered:
             with tracer.start_as_current_span("rerank"):
@@ -110,5 +138,22 @@ async def retrieve(
             ordered.sort(key=lambda r: -r["rerank_score"])
         for row in ordered:
             row["id"], row["document_id"] = str(row["id"]), str(row["document_id"])
+            if row.get("version_id"):
+                row["version_id"] = str(row["version_id"])
+            row["source_segments"] = [
+                segment
+                for segment in row.get("source_segments") or []
+                if segment["start"] < row["end_offset"] and segment["end"] > row["start_offset"]
+            ]
+            row["stale"] = bool(
+                row.get("review_due_at") and row["review_due_at"] < datetime.now(UTC)
+            )
+            if row.get("review_due_at"):
+                row["review_due_at"] = row["review_due_at"].isoformat()
+            for timestamp in ["version_created_at", "document_updated_at"]:
+                if row.get(timestamp):
+                    row[timestamp] = row[timestamp].isoformat()
             row["score"] = scores[row["id"]]
+            row["vector_rank"] = vector_ranks.get(row["id"])
+            row["lexical_rank"] = lexical_ranks.get(row["id"])
         return ordered[:top_k], query_vector, str(coll["id"]), coll["revision"]

@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 import httpx
+from maintenance import open_worker_pool
 
 from atlas.db import pool
 from atlas.ingestion import create_document, index_document
@@ -33,7 +34,7 @@ async def main():
         "storage/persistent-volumes.md",
         "workloads/pods/sidecar-containers.md",
     ]
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         async with httpx.AsyncClient(timeout=40, follow_redirects=True) as client:
             for suffix in extras:

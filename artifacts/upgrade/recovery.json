@@ -1,0 +1,39 @@
+{
+  "result": "passed",
+  "migration": "015",
+  "running_database_unchanged": true,
+  "source_rows_at_backup_time": {
+    "tenants": 37,
+    "users": 43,
+    "memberships": 48,
+    "spaces": 43,
+    "documents": 132,
+    "document_versions": 133,
+    "chunks": 3614,
+    "embeddings": 3614,
+    "queries": 38,
+    "conversations": 7,
+    "messages": 34
+  },
+  "restored": {
+    "tenants": 37,
+    "users": 43,
+    "memberships": 48,
+    "spaces": 43,
+    "documents": 132,
+    "document_versions": 133,
+    "chunks": 3614,
+    "embeddings": 3614,
+    "queries": 38,
+    "conversations": 7,
+    "messages": 34
+  },
+  "version_files_verified": 15,
+  "bundle_files_verified": 15,
+  "encrypted_mfa_enrollments_decrypted": 5,
+  "matching_mfa_key_preserved": true,
+  "recovery_redis_database": 14,
+  "connection_file_mode": "0600",
+  "backup_bytes": 17345844,
+  "verification": "Real database restore/migration, exact table counts, every original-file version hash, existing MFA decryption; no app cutover performed."
+}

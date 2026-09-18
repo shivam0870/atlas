@@ -1,0 +1,10 @@
+# Frontend, account cookies, API and streaming answers share one HTTPS origin.
+{$ATLAS_DOMAIN} {
+	# Do not enable URL access logs: verification links contain one-use tokens.
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		X-Frame-Options DENY
+	}
+	reverse_proxy api:8100
+}

@@ -2,11 +2,11 @@
 
 Atlas turns a workspace’s documents and service inventory into searchable, cited answers. It combines explicit hybrid retrieval, a bounded tool-using agent, PostgreSQL tenant isolation, durable background ingestion, and an operational console. Generation, embeddings, reranking, and the optional judge run locally. Paid model APIs are disabled.
 
-![Atlas console](artifacts/atlas-overview.png)
+![Atlas console](artifacts/atlas-upgrade-home.png)
 
 ## Use the running app
 
-Open **http://127.0.0.1:8100**, then choose **Acme Engineering**. It contains pinned Kubernetes documentation and a clearly marked synthetic team runbook. **Northstar Labs** has separate private demonstration data.
+Open **http://127.0.0.1:8100**, register a personal account, and open the verification email in the local inbox at **http://127.0.0.1:58025**. Create a company or accept an invitation from onboarding. Existing demonstration workspaces require the local administrative claim procedure below; their old browser selector no longer grants access.
 
 Try:
 
@@ -14,7 +14,7 @@ Try:
 - “How do readiness and liveness probes differ?”
 - In **Agent + tools** mode: “Look up checkout in inventory and search its release runbook. How many replicas does it use, and which team approves releases?”
 
-Upload UTF-8 Markdown or plain text, wait for **ready**, ask a question, and click a citation to inspect its exact passage. The console also provides query history, key management, indexing job status/retry, workspace token budgets, and evaluation-label review.
+Upload Markdown, plain text, PDF or DOCX into a knowledge space, wait for **ready**, ask a question, and click a citation to inspect its exact version and passage. Conversations and saved items are private to each user. The console includes company membership and teams, restricted spaces, document replacement, service inventory, scoped integration credentials, notifications, budgets, audit metadata and evaluation review.
 
 ```sh
 make start   # start this project's services
@@ -26,7 +26,7 @@ Logs, process IDs, local keys, and downloaded models stay in ignored directories
 
 ## What is finished, and what still needs a human
 
-All five phases have implementations. Automated tests exercise isolation, indexing, retrieval, streaming, tools/MCP, quota enforcement, retry/failover, cache behavior, worker recovery, and the browser flows. See [TEST_REPORT.md](TEST_REPORT.md) for executed checks and limitations.
+The original five technical phases are extended by the [F01–F14 product upgrade](PRODUCT_UPGRADE_PLAN.md). Automated tests exercise account recovery and MFA, memberships, access revocation, private history, indexing, retrieval, streaming, tools/MCP, quotas, evaluations and worker recovery. See [UPGRADE_RELEASE.md](UPGRADE_RELEASE.md) for current upgrade verification; [TEST_REPORT.md](TEST_REPORT.md) records the earlier technical release.
 
 **Formal corpus quality acceptance is pending your review of 50 labels.** The original brief explicitly requires the owner to review every label. Generated questions remain `reviewed: false`; neither the code nor this report treats them as ground truth. The evaluation engine refuses to run against unreviewed, changed, or deleted evidence. Synthetic engineering experiments below are a separate test dataset.
 
@@ -36,7 +36,7 @@ Kubernetes resources are deployment templates. A local implementation and smoke 
 
 ```mermaid
 flowchart LR
-    UI[React console] --> API[FastAPI + scoped API keys]
+    UI[React console] --> API[FastAPI + personal sessions]
     MCP[MCP client] --> API
     API --> PG[(PostgreSQL + pgvector + forced RLS)]
     API --> CONTROL[(Redis: limits, circuits, streams)]
@@ -91,19 +91,84 @@ python3 scripts/configure.py
 docker-compose up -d --build
 ```
 
-Model initialization and the first Qwen pull take time. The API and worker wait for migrations and model setup. Allocate at least 6 GiB to the Docker VM as a starting point for CPU inference; capacity still needs verification. The reference Colima VM has 2 GiB and shares memory with unrelated containers. The image built and passed non-root, health, readiness, static UI, authentication, and host-inference connectivity checks, but its uncached query timed out under resource pressure. **A complete container inference run remains unverified.** The native application is the tested local path. For a larger VM, `OLLAMA_URL_DOCKER=http://host.lima.internal:11435` uses native Metal inference; Docker Desktop uses `host.docker.internal`. `ATLAS_API_PORT=8101` selects another host port.
+Model initialization and the first Qwen pull take time. The API and worker wait for migrations and model setup. Allocate at least 6 GiB to the Docker VM as a starting point for CPU inference; that capacity still needs verification. The shared reference Colima VM has 2 GiB and also runs unrelated containers. The final image built and passed non-root, health/readiness, exact UI assets, personal registration/verification/login, company creation and logout. Its uncached retrieval/generation attempt stalled under shared-VM pressure; the test container was stopped, and native readiness recovered. **Container inference remains unverified.** The native application is the tested local path. See [current evidence](artifacts/container-smoke.json).
 
-The container API receives runtime credentials only; the migration service owns admin credentials. Local convenience workspace login is disabled in container/cluster mode. Create a tenant through the administrative CLI, then read its generated key from the private workspace file to sign in. Do not print keys in terminal logs or commit that file.
+A resource-constrained build can package the already verified host frontend:
 
 ```sh
-docker-compose run --rm --no-deps -v atlas-rag_console_data:/app/.local migrate python -m atlas.cli tenant "My workspace" my-workspace
-docker-compose cp api:/app/.local/workspaces.json .local/docker-workspaces.json
-chmod 600 .local/docker-workspaces.json
+npm --prefix web ci
+npm --prefix web run build
+env DOCKER_BUILDKIT=0 docker build -f Dockerfile.prebuilt -t atlas-rag:upgrade .
 ```
 
-For migrations, the `migrate` service already has its database admin URL. The named volume above belongs to Compose project `atlas-rag`. This creates an empty tenant; upload your own documents in the UI.
+`Dockerfile` builds the frontend inside Docker; `Dockerfile.prebuilt` requires a freshly built `web/dist`. This alternative avoids the VM compiler memory peak; it does not remove runtime model memory requirements. For a sufficiently provisioned VM, `OLLAMA_URL_DOCKER=http://host.lima.internal:11435` uses native Metal generation; Docker Desktop uses `host.docker.internal`. When selecting `ATLAS_API_PORT=8101`, also set `APP_URL=http://127.0.0.1:8101` so verification links and same-origin checks use the correct origin.
+
+The container API receives application and identity credentials; the migration service owns admin credentials. People register accounts and create companies through the UI. Integration keys authenticate automated clients only. Keep `APP_URL`, SMTP and container database addresses consistent with the chosen deployment; non-loopback account URLs require HTTPS.
+
+## Product upgrade, existing data and recovery
+
+For an existing checkout, stop native writers, create a private backup, generate any missing configuration without replacing existing secrets, install locked dependencies, migrate and rebuild:
+
+```sh
+make stop
+.venv/bin/python scripts/backup.py
+python3 scripts/configure.py
+uv sync
+.venv/bin/alembic upgrade head
+npm --prefix web ci
+npm --prefix web run build
+make start
+```
+
+The backup bundle under `.local/backups/` includes a PostgreSQL dump, uploads, private configuration and integrity hashes. The local helper validates the loopback Docker PostgreSQL endpoint and follows the configured database name, including after a recovery switch. Protect it as account data: `MFA_ENCRYPTION_KEY` must accompany the database to recover enrolled authenticators. Migrations preserve existing content and create default spaces, immutable source versions and legacy service identities. Ordinary signup cannot claim existing companies by name or slug.
+
+After registering and verifying the intended owner, run this local operator command once for each unclaimed workspace:
+
+```sh
+.venv/bin/python scripts/claim_workspace.py --tenant acme --email owner@example.test
+```
+
+Use the actual existing slug or UUID. The command requires the configured administrative database role, creates ownership atomically, preserves documents and revokes legacy keys. Repeating the same claim is safe; a different account cannot take over a claimed workspace. Create fresh service credentials in **Integrations**, assigning only the spaces and scopes the client needs. Secrets are displayed once.
+
+To rehearse fresh installation or the preserved snapshot upgrade in separate databases:
+
+```sh
+.venv/bin/python scripts/verify_upgrade.py --fresh
+.venv/bin/python scripts/verify_upgrade.py
+```
+
+Snapshot verification uses the private dump named by `.local/latest-upgrade-backup`; it writes connection overrides to `.local/upgrade-test.env`. Use those overrides and Redis database15 for destructive integration fixtures, never the daily-use database. Identity/admin regression checks are:
+
+```sh
+.venv/bin/python scripts/isolated.py .venv/bin/pytest tests/test_accounts.py tests/test_organizations.py tests/test_administration.py -q
+```
+
+Restore a backup into a new recovery database, leaving the running database intact:
+
+```sh
+.venv/bin/python scripts/restore_backup.py .local/backups/atlas-YYYYMMDDTHHMMSS --database atlas_recovery_review
+```
+
+The command verifies the bundle hashes, restores and migrates the new database, and writes private connection overrides with mode 0600. Recovery uses empty Redis database 14 so it cannot consume the live queue or share live cache/quota state; tests use database 15. Before switching all four database URLs, stop writers and restore the matching `uploads/` files and `MFA_ENCRYPTION_KEY` from the bundle. Validate login, original document downloads and citations against the recovery target, then start the app. Do not run down-migrations to recover; retain the original database and bundle until recovery is verified.
+
+Account deletion immediately disables login and revokes sessions; company deletion immediately suspends access and integration credentials. The worker processes the retained-data lifecycle after **30 days**: deleted companies are purged, disabled personal accounts are anonymized. Company-owned records remain with an active company. A last company owner must transfer ownership or delete that company first. Backups have their own operator-managed retention and are not erased by application deletion.
+
+### Company roles
+
+| Capability | Owner | Admin | Editor | Viewer |
+|---|---|---|---|---|
+| Ask, search, citations, private history and saved items | Yes | Yes | Yes | Yes |
+| Maintain knowledge and inventory in writable spaces | Yes | Yes | Yes | No |
+| Manage spaces, teams, invitations, integrations and quotas | Yes | Yes | No | No |
+| Assign or modify owner/admin roles | Yes | No | No | No |
+| Transfer ownership or delete the company | Yes | No | No | No |
+| Review labels and run evaluations | Yes | Yes | When delegated | When delegated |
+
+Knowledge visibility and explicit space grants still apply to each request. Administrative access does not grant access to someone else's private conversations or saved items. Removing membership or a grant invalidates access to old answers, citations and cached evidence, as well as new retrieval.
 
 ## Measured local load
+
+These measurements predate F01–F14. They are historical results, not performance acceptance for the upgraded permission and account flows.
 
 Source: [versioned k6 artifacts](artifacts/benchmarks/20260915T163153Z) and [summary](artifacts/benchmarks/latest.json). Workloads ran separately on Apple M1 Pro / 16 GiB / macOS 26.5.2, with PostgreSQL and Redis in Colima and native Ollama Qwen3-4B-Instruct-2507 Q4_K_M. Query workloads lasted 30 seconds, after warmup. The query asks for a short, known release code; these figures do not represent long-answer throughput.
 
@@ -163,7 +228,7 @@ A gold span may overlap multiple chunks, so full chunk recall is stricter than f
 ## Serving guarantees and limits
 
 - **Two isolation layers:** application predicates plus forced PostgreSQL RLS. Runtime roles are non-superuser and cannot bypass RLS. Transaction-local tenant context resets with the transaction. Composite foreign keys prevent cross-tenant references.
-- API keys are random and stored as digests. Scopes, revocation, expiry, HTTP-only cookies, same-origin mutation checks, and source ownership checks are enforced. Convenience login is restricted to loopback host/peer checks.
+- People use revocable opaque sessions with idle and absolute expiry, optional TOTP MFA and single-use recovery codes. Integration keys are independently scoped, expiring and revocable. Credentials are stored as digests; MFA secrets are encrypted. HTTP-only cookies, same-origin mutation checks, current membership and evidence permissions are enforced. Company administrators receive operational metadata without automatic access to another person's conversations.
 - Redis Lua applies an atomic sliding window using Redis time. Rate state and the queue use durable `noeviction` Redis. Optional cache data uses a separate bounded `allkeys-lru` Redis.
 - Monthly tokens are reserved before inference and settled idempotently from observed usage. Ambiguous cancellation/failure retains the reservation instead of inventing usage. Local USD spend remains zero; paid-provider configuration is rejected at startup.
 - Exact answer caching is enabled. Semantic reuse is implemented but **disabled by default until its threshold is calibrated**. Cache namespaces include tenant, scopes, collection revision, retrieval settings, model, and prompt revision. Ingestion/deletion advances collection revisions. Cache failure is a miss; unavailable rate enforcement fails closed.

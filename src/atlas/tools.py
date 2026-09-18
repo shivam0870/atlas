@@ -63,17 +63,35 @@ def entity_source(row: dict) -> dict:
     }
 
 
-async def search_documents(tenant_id: UUID, arguments: SearchArguments) -> ToolResult:
-    rows, _, _, _ = await retrieve(tenant_id, arguments.question, arguments.top_k)
+async def search_documents(
+    tenant_id: UUID, arguments: SearchArguments, space_ids=None, document_ids=None
+) -> ToolResult:
+    rows, _, _, _ = await retrieve(
+        tenant_id,
+        arguments.question,
+        arguments.top_k,
+        space_ids=space_ids,
+        document_ids=document_ids,
+    )
     return ToolResult(sources=rows, message=f"Retrieved {len(rows)} passages")
 
 
-async def query_structured_data(tenant_id: UUID, arguments: StructuredArguments) -> ToolResult:
+async def query_structured_data(
+    tenant_id: UUID, arguments: StructuredArguments, space_ids=None, document_ids=None
+) -> ToolResult:
     async with transaction(tenant_id) as conn:
         rows = await (
             await conn.execute(
-                "SELECT id,name,kind,attributes FROM atlas.entities WHERE tenant_id=%s AND kind=%s AND name ILIKE %s ORDER BY name LIMIT 20",
-                (tenant_id, arguments.kind, "%" + arguments.name + "%"),
+                "SELECT id,name,kind,attributes FROM atlas.entities WHERE tenant_id=%s AND kind=%s AND name ILIKE %s AND NOT archived AND (%s::uuid[] IS NULL OR space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR document_ids && %s::uuid[]) ORDER BY name LIMIT 20",
+                (
+                    tenant_id,
+                    arguments.kind,
+                    "%" + arguments.name + "%",
+                    space_ids,
+                    space_ids,
+                    document_ids,
+                    document_ids,
+                ),
             )
         ).fetchall()
     records = [{**r, "id": str(r["id"])} for r in rows]
@@ -84,12 +102,14 @@ async def query_structured_data(tenant_id: UUID, arguments: StructuredArguments)
     )
 
 
-async def compare_items(tenant_id: UUID, arguments: CompareArguments) -> ToolResult:
+async def compare_items(
+    tenant_id: UUID, arguments: CompareArguments, space_ids=None, document_ids=None
+) -> ToolResult:
     async with transaction(tenant_id) as conn:
         rows = await (
             await conn.execute(
-                "SELECT id,name,kind,attributes FROM atlas.entities WHERE tenant_id=%s AND name=ANY(%s) ORDER BY name",
-                (tenant_id, arguments.names),
+                "SELECT id,name,kind,attributes FROM atlas.entities WHERE tenant_id=%s AND name=ANY(%s) AND NOT archived AND (%s::uuid[] IS NULL OR space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR document_ids && %s::uuid[]) ORDER BY name",
+                (tenant_id, arguments.names, space_ids, space_ids, document_ids, document_ids),
             )
         ).fetchall()
     records = [{**r, "id": str(r["id"])} for r in rows]
@@ -100,11 +120,19 @@ async def compare_items(tenant_id: UUID, arguments: CompareArguments) -> ToolRes
     )
 
 
-async def execute_tool(tenant_id: UUID, name: str, arguments: dict) -> ToolResult:
+async def execute_tool(
+    tenant_id: UUID, name: str, arguments: dict, space_ids=None, document_ids=None
+) -> ToolResult:
     if name == "search_documents":
-        return await search_documents(tenant_id, SearchArguments.model_validate(arguments))
+        return await search_documents(
+            tenant_id, SearchArguments.model_validate(arguments), space_ids, document_ids
+        )
     if name == "query_structured_data":
-        return await query_structured_data(tenant_id, StructuredArguments.model_validate(arguments))
+        return await query_structured_data(
+            tenant_id, StructuredArguments.model_validate(arguments), space_ids, document_ids
+        )
     if name == "compare_items":
-        return await compare_items(tenant_id, CompareArguments.model_validate(arguments))
+        return await compare_items(
+            tenant_id, CompareArguments.model_validate(arguments), space_ids, document_ids
+        )
     raise ValueError("Unknown tool")

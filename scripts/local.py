@@ -49,7 +49,8 @@ def main():
             raise SystemExit("A worker is finishing an in-flight document. Retry after it drains.")
     if args.action in {"start", "restart"}:
         subprocess.run(
-            ["docker-compose", "up", "-d", "postgres", "redis", "cache", "collector"], check=True
+            ["docker-compose", "up", "-d", "postgres", "redis", "cache", "collector", "mailpit"],
+            check=True,
         )
         logs = ROOT / ".local/logs"
         logs.mkdir(parents=True, exist_ok=True)

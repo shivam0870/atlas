@@ -1,0 +1,55 @@
+{
+  "basis": "Automated synthetic fixture only; NOT human review, corpus-quality acceptance or judge calibration",
+  "approval_fields": "Populated only in disposable isolated test database to exercise the existing review gate",
+  "reviewer": "Automated synthetic fixture (not a human reviewer)",
+  "transport": "Real ASGI HTTP routes and separate real atlas.worker process; isolated PostgreSQL and Redis15",
+  "started_at": "2026-09-17T12:44:14.738541+00:00",
+  "isolated_database": "atlas_upgrade_verify_016a8654",
+  "selected_questions": 1,
+  "gate_fixture_labels": 40,
+  "result": "passed",
+  "progress": [
+    {
+      "status": "queued",
+      "progress": 0,
+      "total": 1
+    },
+    {
+      "status": "running",
+      "progress": 0,
+      "total": 1
+    },
+    {
+      "status": "completed",
+      "progress": 1,
+      "total": 1
+    }
+  ],
+  "metrics": {
+    "mrr": 1.0,
+    "ndcg_at_3": 1.0,
+    "ndcg_at_5": 1.0,
+    "recall_at_3": 1.0,
+    "recall_at_5": 1.0,
+    "faithfulness_proxy": 1.0
+  },
+  "judgment": {
+    "answer": "The synthetic Juniper service runs three replicas, and its release approval code is MAPLE-392 [1].",
+    "score": 1.0,
+    "reason": "The evidence states that the synthetic Juniper service runs three replicas and has a release approval code of MAPLE-392. This directly supports the answer's claims about the number of replicas and the release approval code. The mention of the Platform team owning synthetic Juniper is not relevant to the answer. The other evidence refers to unrelated training notes and does not pertain to the Juniper service."
+  },
+  "evidence_count": 6,
+  "usage": [
+    {
+      "operation": "evaluation",
+      "model": "qwen3:4b-instruct-2507-q4_K_M",
+      "input_tokens": 599,
+      "output_tokens": 131,
+      "actual_api_cost_usd": "0E-10",
+      "status": "completed",
+      "principal_kind": "user"
+    }
+  ],
+  "elapsed_seconds": 58.2,
+  "fixture_cleanup": "completed in finally"
+}

@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 from fastapi import HTTPException
+from maintenance import open_worker_pool
 
 from atlas.db import pool, transaction
 from atlas.evaluation import EvalConfig, regression_gate, run_evaluation
@@ -27,7 +28,7 @@ async def main():
         w for w in json.loads(Path(".local/workspaces.json").read_text()) if w["slug"] == "acme"
     )
     tenant = UUID(workspace["id"])
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         baseline = await run_evaluation(tenant, EvalConfig(split=args.split, with_judge=args.judge))
         configs = (

@@ -1,0 +1,7 @@
+{
+  "target_database": "atlas_upgrade_verify_fresh_bbb94701",
+  "migration": "015",
+  "tenants": 0,
+  "tables": 39,
+  "source_database_modified": false
+}

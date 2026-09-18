@@ -1,0 +1,26 @@
+# Build the browser bundle with npm ci && npm run build in web/ first.
+# This variant avoids running the frontend compiler inside a memory-constrained shared VM.
+FROM python:3.12-slim-bookworm AS build
+RUN pip install --no-cache-dir uv==0.12.5
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+FROM python:3.12-slim-bookworm
+RUN useradd --create-home --uid 10001 atlas && mkdir -p /app/.local /app/.models && chown -R atlas:atlas /app
+WORKDIR /app
+COPY --from=build --chown=atlas:atlas /app/.venv /app/.venv
+COPY --chown=atlas:atlas src ./src
+COPY --chown=atlas:atlas web/dist ./web/dist
+COPY --chown=atlas:atlas migrations ./migrations
+COPY --chown=atlas:atlas scripts ./scripts
+COPY --chown=atlas:atlas models ./models
+COPY --chown=atlas:atlas datasets ./datasets
+COPY --chown=atlas:atlas prompts ./prompts
+COPY --chown=atlas:atlas alembic.ini ./
+ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH="/app/src" TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=4
+USER atlas
+EXPOSE 8100
+HEALTHCHECK --interval=15s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"
+CMD ["uvicorn", "atlas.main:app", "--host", "0.0.0.0", "--port", "8100", "--no-access-log", "--timeout-graceful-shutdown", "30"]

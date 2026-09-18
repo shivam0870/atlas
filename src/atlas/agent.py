@@ -76,11 +76,23 @@ async def run_agent(
     max_steps=6,
     planner: Callable[[State], Awaitable[Decision]] | None = None,
     executor=None,
+    space_ids=None,
+    document_ids=None,
+    access_check=None,
 ):
     planner = planner or model_plan
-    executor = executor or execute_tool
+    if executor is None:
+
+        async def scoped_executor(tenant, name, arguments):
+            return await execute_tool(
+                tenant, name, arguments, space_ids=space_ids, document_ids=document_ids
+            )
+
+        executor = scoped_executor
 
     async def plan(state: State):
+        if access_check is not None:
+            await access_check(state["sources"])
         with tracer.start_as_current_span("agent.plan") as span:
             span.set_attribute("agent.step", state["steps"])
             try:
@@ -101,6 +113,8 @@ async def run_agent(
                 }
 
     async def act(state: State):
+        if access_check is not None:
+            await access_check(state["sources"])
         decision = state["decision"]
         if decision["tool"] == "invalid":
             return {}

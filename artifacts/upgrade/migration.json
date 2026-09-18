@@ -1,0 +1,21 @@
+{
+  "target_database": "atlas_upgrade_verify_016a8654",
+  "source_database_modified": false,
+  "backup_bytes": 16508564,
+  "before": {
+    "tenants": 2,
+    "documents": 118,
+    "chunks": 3590,
+    "embeddings": 3590,
+    "queries": 20
+  },
+  "after": {
+    "tenants": 2,
+    "documents": 118,
+    "chunks": 3590,
+    "embeddings": 3590,
+    "queries": 20
+  },
+  "unversioned_chunks": 0,
+  "migration": "015"
+}

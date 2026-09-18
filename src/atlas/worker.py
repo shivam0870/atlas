@@ -3,6 +3,8 @@
 import asyncio
 import logging
 import signal
+import time
+from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -13,8 +15,9 @@ from redis.exceptions import ResponseError
 from atlas import db
 from atlas.config import settings
 from atlas.db import transaction
+from atlas.evaluation import process_evaluation_job
 from atlas.ingestion import index_document
-from atlas.serving import redis
+from atlas.serving import cache_redis, redis
 from atlas.telemetry import indexed, queue_depth, setup, tracer
 
 STREAM = "atlas:ingestion"
@@ -37,6 +40,33 @@ async def dispatch():
                 (row["tenant_id"], row["id"]),
             )
     return len(rows)
+
+
+async def dispatch_evaluation(owner):
+    async with db.pool.connection() as conn:
+        jobs = await (
+            await conn.execute("SELECT * FROM atlas.pending_evaluation_jobs()")
+        ).fetchall()
+    for job in jobs:
+        await process_evaluation_job(job["tenant_id"], job["id"], owner)
+
+
+async def maintenance():
+    async with db.pool.connection() as conn, conn.transaction():
+        await conn.execute("SELECT atlas.deliver_maintenance_notifications()")
+        job = await (await conn.execute("SELECT * FROM atlas.process_retention()")).fetchone()
+    if job:
+        for key in job["storage_keys"]:
+            await asyncio.to_thread(
+                (Path(".local/uploads") / str(UUID(key))).unlink, missing_ok=True
+            )
+        if job["kind"] == "tenant":
+            async for key in cache_redis.scan_iter(
+                match=f"atlas:answer:{job['target_id']}:*", count=100
+            ):
+                await cache_redis.delete(key)
+        async with db.pool.connection() as conn:
+            await conn.execute("SELECT atlas.finish_retention(%s)", (job["job_id"],))
 
 
 async def heartbeat(tenant, job, owner):
@@ -127,6 +157,7 @@ async def main():
     setup()
     await db.pool.open(wait=True)
     owner = str(uuid4())
+    maintained_at = 0.0
     try:
         await redis.xgroup_create(STREAM, GROUP, id="0", mkstream=True)
     except ResponseError as exc:
@@ -151,12 +182,19 @@ async def main():
                         messages = batches[0][1] if batches else []
                 for message_id, payload in messages:
                     await process(message_id, payload, owner)
+                await dispatch_evaluation(owner)
+                if time.monotonic() - maintained_at > 30:
+                    await maintenance()
+                    maintained_at = time.monotonic()
             except Exception as exc:
                 log.warning("worker_retry", extra={"fields": {"error_code": type(exc).__name__}})
                 await asyncio.sleep(2)
     finally:
         await db.pool.close()
+        await db.application_pool.close()
+        await db.identity_pool.close()
         await redis.aclose()
+        await cache_redis.aclose()
 
 
 if __name__ == "__main__":

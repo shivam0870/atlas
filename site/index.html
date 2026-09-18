@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Atlas by Shivam Kumar: a multi-tenant AI knowledge platform with private conversations, permission-aware retrieval and local models."
+    />
+    <meta name="theme-color" content="#173e30" />
+    <title>Atlas — Knowledge, with evidence.</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18392e;
+        --muted: #54675d;
+        --paper: #f4f5ed;
+        --line: #d5ddd1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          17px/1.65 system-ui,
+          sans-serif;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid #946422;
+        outline-offset: 5px;
+      }
+      .skip {
+        position: absolute;
+        top: -100px;
+        left: 16px;
+        background: white;
+        padding: 8px;
+        z-index: 10;
+      }
+      .skip:focus {
+        top: 10px;
+      }
+      .wrap {
+        width: min(1120px, calc(100% - 48px));
+        margin: auto;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 25px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        font-size: 29px;
+        font-weight: 750;
+        letter-spacing: -1.6px;
+        text-decoration: none;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        font-size: 14px;
+      }
+      nav a {
+        text-decoration: none;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 2px;
+        font-weight: 700;
+      }
+      .hero {
+        padding: 76px 0 45px;
+        max-width: 860px;
+      }
+      h1 {
+        font:
+          clamp(48px, 8vw, 94px)/1.04 Georgia,
+          serif;
+        letter-spacing: -3px;
+        margin: 20px 0 24px;
+      }
+      h2 {
+        font:
+          clamp(30px, 4vw, 44px)/1.15 Georgia,
+          serif;
+        margin: 0 0 18px;
+      }
+      h3 {
+        font-size: 19px;
+        margin: 0 0 10px;
+      }
+      p {
+        margin: 0 0 18px;
+      }
+      .lead {
+        max-width: 690px;
+        font-size: 20px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 28px;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 20px;
+        border: 1px solid var(--ink);
+        border-radius: 7px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .primary {
+        color: white;
+        background: var(--ink);
+      }
+      .button:hover {
+        box-shadow: 0 3px 0 #b9c8b3;
+      }
+      .status {
+        margin: 25px 0 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      figure {
+        margin: 0;
+      }
+      .preview {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 15px 45px #173e3010;
+      }
+      .preview img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      figcaption {
+        padding: 14px 20px;
+        color: var(--muted);
+        font-size: 13px;
+        border-top: 1px solid var(--line);
+      }
+      section {
+        padding: 64px 0;
+        border-bottom: 1px solid var(--line);
+        scroll-margin-top: 25px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .card {
+        background: #fff;
+        padding: 26px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .card p {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 0;
+      }
+      .number {
+        display: block;
+        font:
+          46px/1.2 Georgia,
+          serif;
+        margin-bottom: 8px;
+      }
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        list-style: none;
+        padding: 0;
+        counter-reset: flow;
+      }
+      .flow li {
+        padding: 20px;
+        border-top: 2px solid #77947b;
+        font-size: 15px;
+      }
+      .flow li::before {
+        counter-increment: flow;
+        content: "0" counter(flow);
+        display: block;
+        color: #526e58;
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+      .flow strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 0;
+        list-style: none;
+      }
+      .stack li {
+        background: #e4eadf;
+        border-radius: 30px;
+        padding: 5px 14px;
+        font-size: 14px;
+      }
+      .note {
+        padding: 20px 24px;
+        border-left: 3px solid #75906e;
+        margin-top: 25px;
+        font-size: 15px;
+      }
+      details {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px 22px;
+        margin: 15px 0;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 650;
+      }
+      details p {
+        margin: 15px 0 0;
+        color: var(--muted);
+      }
+      footer {
+        padding: 30px 0 45px;
+        color: var(--muted);
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      @media (max-width: 700px) {
+        .wrap {
+          width: calc(100% - 32px);
+        }
+        header {
+          align-items: flex-start;
+        }
+        nav {
+          gap: 13px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        .hero {
+          padding-top: 45px;
+        }
+        h1 {
+          letter-spacing: -2px;
+        }
+        .grid,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+        section {
+          padding: 42px 0;
+        }
+        .lead {
+          font-size: 18px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="./" aria-label="Atlas home">atlas.</a>
+        <nav aria-label="Main navigation">
+          <a href="#product">Product</a><a href="#architecture">Architecture</a
+          ><a href="#verification">Verification</a
+          ><a href="https://github.com/shivam0870/atlas">GitHub ↗</a>
+        </nav>
+      </header>
+      <main id="main">
+        <div class="hero">
+          <p class="eyebrow">An engineering project by Shivam Kumar</p>
+          <h1>Your team's knowledge.<br />Answers with evidence.</h1>
+          <p class="lead">
+            Atlas brings documents, service inventory and private conversations
+            together. Ask a question, follow its sources, and keep access under
+            your company's control.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/shivam0870/atlas"
+              >Explore the source ↗</a
+            ><a class="button" href="#architecture">See how it works ↓</a>
+          </div>
+          <p class="status">
+            Project showcase · Full application verified locally · Public
+            interactive demo pending
+          </p>
+        </div>
+        <figure class="preview">
+          <img
+            src="assets/atlas-upgrade-home.png"
+            alt="Atlas application home with a forest-green sidebar, company switcher, question form, knowledge library and workspace health indicators"
+            width="1280"
+            height="1310"
+            fetchpriority="high"
+          />
+          <figcaption>
+            Actual application screenshot from a synthetic test company. This
+            page presents the project; the pictured controls belong to the
+            application.
+          </figcaption>
+        </figure>
+        <section id="product" aria-labelledby="product-heading">
+          <p class="eyebrow">Built around a real workflow</p>
+          <h2 id="product-heading">From a document to a decision.</h2>
+          <div class="grid">
+            <article class="card">
+              <h3>Knowledge with boundaries</h3>
+              <p>
+                Company roles, teams and restricted spaces control access to
+                versioned PDF, DOCX and text documents. Permissions are checked
+                again when evidence is opened.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Answers you can inspect</h3>
+              <p>
+                Hybrid keyword and vector search finds passages. Local models
+                answer with citations to the exact document version, with
+                follow-ups saved in private conversations.
+              </p>
+            </article>
+            <article class="card">
+              <h3>A complete workspace</h3>
+              <p>
+                Personal accounts, MFA, invitations, saved items, service
+                inventory, scoped integration credentials, usage controls and
+                evaluation review share one interface.
+              </p>
+            </article>
+          </div>
+        </section>
+        <section id="architecture" aria-labelledby="architecture-heading">
+          <p class="eyebrow">Architecture</p>
+          <h2 id="architecture-heading">
+            Local models. Explicit access checks.
+          </h2>
+          <ol class="flow">
+            <li>
+              <strong>Ingest</strong>FastAPI stores immutable originals. A
+              Redis-backed worker extracts, chunks and indexes documents.
+            </li>
+            <li>
+              <strong>Retrieve</strong>PostgreSQL/pgvector and BM25 search
+              accessible passages. Rank fusion and reranking select evidence.
+            </li>
+            <li>
+              <strong>Generate</strong>Ollama runs Qwen locally. A bounded
+              LangGraph agent can also consult permitted inventory and search
+              tools.
+            </li>
+            <li>
+              <strong>Verify</strong>React streams the answer and opens
+              versioned citations. Revocation is enforced across saved and
+              historical content.
+            </li>
+          </ol>
+          <ul class="stack" aria-label="Technology stack">
+            <li>React + TypeScript</li>
+            <li>FastAPI</li>
+            <li>PostgreSQL + pgvector</li>
+            <li>Redis</li>
+            <li>Ollama / Qwen</li>
+            <li>LangGraph + MCP</li>
+            <li>Playwright</li>
+          </ul>
+          <p class="note">
+            The application serves frontend and API from one origin, uses
+            revocable personal sessions, and isolates company data with forced
+            PostgreSQL row-level security. Company administrators do not
+            automatically gain access to members' private conversations.
+          </p>
+          <a href="https://github.com/shivam0870/atlas#architecture"
+            >Read the full architecture and setup →</a
+          >
+        </section>
+        <section id="verification" aria-labelledby="verification-heading">
+          <p class="eyebrow">Executed verification</p>
+          <h2 id="verification-heading">
+            Evidence alongside the implementation.
+          </h2>
+          <div class="grid">
+            <div class="card">
+              <span class="number">90</span>
+              <h3>Backend tests passed</h3>
+              <p>
+                Recorded local suite covering accounts, permissions, tenancy,
+                retrieval and service behavior.
+              </p>
+            </div>
+            <div class="card">
+              <span class="number">16</span>
+              <h3>Frontend tests passed</h3>
+              <p>
+                Components and application state, alongside TypeScript and
+                production build checks.
+              </p>
+            </div>
+            <div class="card">
+              <span class="number">7</span>
+              <h3>Real browser journeys passed</h3>
+              <p>
+                Local Chrome journeys against the actual application, including
+                identity and knowledge workflows.
+              </p>
+            </div>
+          </div>
+          <details>
+            <summary>What else was exercised?</summary>
+            <p>
+              Fresh installation and existing-data migrations, backup recovery,
+              actual PDF/DOCX ingestion and version references, local
+              generation, MCP tools, and model failover. See the release report
+              for individual results and execution limits.
+            </p>
+          </details>
+          <details>
+            <summary>What is still unverified?</summary>
+            <p>
+              Public interactive hosting and production email are pending.
+              Container inference did not complete in the shared,
+              memory-constrained VM; the native local runtime is the verified
+              path. Human-reviewed corpus quality acceptance is also pending.
+              Automated test counts do not establish answer accuracy or
+              production scale.
+            </p>
+          </details>
+          <a
+            href="https://github.com/shivam0870/atlas/blob/main/UPGRADE_RELEASE.md"
+            >Read the release report and test artifacts →</a
+          >
+        </section>
+      </main>
+      <footer>
+        <span>Atlas · Built by Shivam Kumar</span
+        ><a href="https://github.com/shivam0870/atlas/blob/main/DEPLOYMENT.md"
+          >Hosting and deployment notes ↗</a
+        >
+      </footer>
+    </div>
+  </body>
+</html>

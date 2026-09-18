@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import UUID
 
 import httpx
+from maintenance import open_worker_pool
 
 from atlas.db import pool
 from atlas.ingestion import create_document, index_document
@@ -83,7 +84,7 @@ async def main():
             )
         workspaces = json.loads((ROOT / ".local/workspaces.json").read_text())
         primary = UUID(next(w["id"] for w in workspaces if w["slug"] == "acme"))
-        await pool.open(wait=True)
+        await open_worker_pool()
         try:
             for index, item in enumerate(manifest["documents"], 1):
                 path = corpus / item["file"]

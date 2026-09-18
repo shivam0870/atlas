@@ -1,0 +1,7 @@
+{
+  "mode": "hybrid",
+  "real_local_embedding": true,
+  "real_database_rls": true,
+  "seconds": 15.058,
+  "sources": 5
+}

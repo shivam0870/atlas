@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from maintenance import open_worker_pool
+
 from atlas.db import pool, transaction
 from atlas.evaluation import label_hash
 
@@ -33,7 +35,7 @@ async def main():
             if w["slug"] == "acme"
         )
     )
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         async with transaction(tenant) as conn:
             for row in rows:

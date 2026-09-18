@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import psycopg
+from maintenance import open_worker_pool
 
 from atlas.config import settings
 from atlas.db import pool, transaction
@@ -23,7 +24,7 @@ async def main():
             "INSERT INTO atlas.tenants(id,slug,name) VALUES(%s,%s,%s)",
             (tenant, str(tenant), "Deterministic experiment fixture"),
         )
-    await pool.open(wait=True)
+    await open_worker_pool()
     results = []
     try:
         fixtures = []

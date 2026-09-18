@@ -39,7 +39,7 @@ async def make_job(tenant, attempts=0, expired=False):
 
 
 async def test_expired_lease_is_recovered_and_duplicate_delivery_is_safe(
-    database, tenants, monkeypatch
+    worker_database, tenants, monkeypatch
 ):
     tenant = tenants[0][0]
     job, doc = await make_job(tenant, expired=True)
@@ -69,7 +69,7 @@ async def test_expired_lease_is_recovered_and_duplicate_delivery_is_safe(
     assert row == {"status": "completed", "attempts": 1}
 
 
-async def test_retry_exhaustion_moves_job_to_dead_letter(database, tenants, monkeypatch):
+async def test_retry_exhaustion_moves_job_to_dead_letter(worker_database, tenants, monkeypatch):
     tenant = tenants[0][0]
     job, _ = await make_job(tenant, attempts=2)
 

@@ -1,0 +1,178 @@
+{
+  "plan": [
+    {
+      "Plan": {
+        "Node Type": "Limit",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 2191.91,
+        "Total Cost": 2191.92,
+        "Plan Rows": 1,
+        "Plan Width": 24,
+        "Plans": [
+          {
+            "Node Type": "Sort",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 2191.91,
+            "Total Cost": 2191.92,
+            "Plan Rows": 1,
+            "Plan Width": 24,
+            "Sort Key": [
+              "((e.embedding <=> '[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'::vector))"
+            ],
+            "Plans": [
+              {
+                "Node Type": "Result",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 112.65,
+                "Total Cost": 2191.9,
+                "Plan Rows": 1,
+                "Plan Width": 24,
+                "One-Time Filter": "((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = 'd572456c-65ac-4f40-8632-edb885e32962'::uuid)",
+                "Plans": [
+                  {
+                    "Node Type": "Nested Loop",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Join Type": "Inner",
+                    "Startup Cost": 112.65,
+                    "Total Cost": 2191.9,
+                    "Plan Rows": 1,
+                    "Plan Width": 1560,
+                    "Inner Unique": false,
+                    "Plans": [
+                      {
+                        "Node Type": "Hash Join",
+                        "Parent Relationship": "Outer",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Join Type": "Inner",
+                        "Startup Cost": 112.36,
+                        "Total Cost": 2178.71,
+                        "Plan Rows": 1,
+                        "Plan Width": 32,
+                        "Inner Unique": true,
+                        "Hash Cond": "(c.document_id = d.id)",
+                        "Join Filter": "(NOT (c.version_id IS DISTINCT FROM d.current_version_id))",
+                        "Plans": [
+                          {
+                            "Node Type": "Bitmap Heap Scan",
+                            "Parent Relationship": "Outer",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Relation Name": "chunks",
+                            "Alias": "c",
+                            "Startup Cost": 52.35,
+                            "Total Cost": 2117.31,
+                            "Plan Rows": 531,
+                            "Plan Width": 64,
+                            "Recheck Cond": "((tenant_id = 'd572456c-65ac-4f40-8632-edb885e32962'::uuid) AND (collection_id = '1b6b092d-b59e-43ee-aea8-4b499e27618c'::uuid))",
+                            "Filter": "can_document(document_id, false)",
+                            "Plans": [
+                              {
+                                "Node Type": "Bitmap Index Scan",
+                                "Parent Relationship": "Outer",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Index Name": "chunks_tenant_id_collection_id_idx",
+                                "Startup Cost": 0.0,
+                                "Total Cost": 52.22,
+                                "Plan Rows": 1594,
+                                "Plan Width": 0,
+                                "Index Cond": "((tenant_id = 'd572456c-65ac-4f40-8632-edb885e32962'::uuid) AND (collection_id = '1b6b092d-b59e-43ee-aea8-4b499e27618c'::uuid))"
+                              }
+                            ]
+                          },
+                          {
+                            "Node Type": "Hash",
+                            "Parent Relationship": "Inner",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Startup Cost": 59.56,
+                            "Total Cost": 59.56,
+                            "Plan Rows": 35,
+                            "Plan Width": 48,
+                            "Plans": [
+                              {
+                                "Node Type": "Seq Scan",
+                                "Parent Relationship": "Outer",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Relation Name": "documents",
+                                "Alias": "d",
+                                "Startup Cost": 0.0,
+                                "Total Cost": 59.56,
+                                "Plan Rows": 35,
+                                "Plan Width": 48,
+                                "Filter": "((tenant_id = 'd572456c-65ac-4f40-8632-edb885e32962'::uuid) AND (status = 'ready'::text) AND (lifecycle = 'active'::text) AND can_document_row(space_id, id, restricted, false))"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "Node Type": "Index Scan",
+                        "Parent Relationship": "Inner",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Scan Direction": "Forward",
+                        "Index Name": "embeddings_pkey",
+                        "Relation Name": "embeddings",
+                        "Alias": "e",
+                        "Startup Cost": 0.28,
+                        "Total Cost": 13.17,
+                        "Plan Rows": 1,
+                        "Plan Width": 1576,
+                        "Index Cond": "((tenant_id = 'd572456c-65ac-4f40-8632-edb885e32962'::uuid) AND (chunk_id = c.id))",
+                        "Filter": "(SubPlan 1)",
+                        "Plans": [
+                          {
+                            "Node Type": "Result",
+                            "Parent Relationship": "SubPlan",
+                            "Subplan Name": "SubPlan 1",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Startup Cost": 0.28,
+                            "Total Cost": 8.55,
+                            "Plan Rows": 1,
+                            "Plan Width": 0,
+                            "One-Time Filter": "((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = e.tenant_id)",
+                            "Plans": [
+                              {
+                                "Node Type": "Index Scan",
+                                "Parent Relationship": "Outer",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Scan Direction": "Forward",
+                                "Index Name": "chunks_pkey",
+                                "Relation Name": "chunks",
+                                "Alias": "c_1",
+                                "Startup Cost": 0.28,
+                                "Total Cost": 8.55,
+                                "Plan Rows": 1,
+                                "Plan Width": 0,
+                                "Index Cond": "((tenant_id = e.tenant_id) AND (id = e.chunk_id))",
+                                "Filter": "can_document(document_id, false)"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "jit_off_seconds": 5.436,
+  "rows": 20
+}

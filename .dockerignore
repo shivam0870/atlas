@@ -1,12 +1,12 @@
 .git
 .env
+deploy/.env
 .venv
 .local
 .models
 .cache
 artifacts
 web/node_modules
-web/dist
 web/test-results
 web/playwright-report
 __pycache__

@@ -3,13 +3,14 @@ import json
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from maintenance import open_worker_pool
 from psycopg.types.json import Jsonb
 
 from atlas.db import pool, transaction
 
 
 async def main():
-    await pool.open(wait=True)
+    await open_worker_pool()
     try:
         for w in json.loads(Path(".local/workspaces.json").read_text()):
             records = (
@@ -55,8 +56,8 @@ async def main():
             async with transaction(UUID(w["id"])) as conn:
                 for name, attributes in records:
                     await conn.execute(
-                        "INSERT INTO atlas.entities(tenant_id,id,name,kind,attributes) VALUES(%s,%s,%s,'service',%s) ON CONFLICT(tenant_id,name,kind) DO UPDATE SET attributes=excluded.attributes",
-                        (UUID(w["id"]), uuid4(), name, Jsonb(attributes)),
+                        "INSERT INTO atlas.entities(tenant_id,id,name,kind,attributes,space_id) VALUES(%s,%s,%s,'service',%s,(SELECT id FROM atlas.spaces WHERE tenant_id=%s ORDER BY created_at LIMIT 1)) ON CONFLICT(tenant_id,name,kind) DO UPDATE SET attributes=excluded.attributes",
+                        (UUID(w["id"]), uuid4(), name, Jsonb(attributes), UUID(w["id"])),
                     )
     finally:
         await pool.close()

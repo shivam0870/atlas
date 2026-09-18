@@ -1,0 +1,21 @@
+{
+  "stats": {
+    "startTime": "2026-09-17T12:37:28.465Z",
+    "duration": 52320.147,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "journeys": [
+    "retired workspace keys cannot create a browser session",
+    "create raw text, inspect its immutable version, trash and restore",
+    "real inventory CRUD, CSV validation, comparison, scoped credentials and management screens",
+    "real registration, local email verification, company onboarding, theme and mobile navigation",
+    "real invitation, password reset session revocation and one-use MFA recovery",
+    "verified invitees can join from their pending company invitation",
+    "real restricted upload, cited answer, follow-up, saved history, company switch and access revocation"
+  ],
+  "production_requests_mocked": false,
+  "includes_real_local_model_generation": true
+}
