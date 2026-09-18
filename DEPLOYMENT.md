@@ -1,13 +1,13 @@
 # Atlas deployment and resume demo
 
-Updated 18 September 2026. **Deployment preparation only: no public service, DNS record, cloud purchase or Git push has been performed.** Approved budget: **₹0**. Target repository: [shivam0870/atlas](https://github.com/shivam0870/atlas), verified public and empty through the GitHub API. No custom domain is available.
+Updated 18 September 2026. **Source published; static project showcase deployed. The interactive application is not publicly hosted yet.** Approved budget: **₹0**. Repository: [shivam0870/atlas](https://github.com/shivam0870/atlas). Showcase: [shivam0870.github.io/atlas](https://shivam0870.github.io/atlas/). No custom domain or paid resources were purchased.
 
 ## Recommended ₹0 setup
 
 | Part | Choice | Availability |
 |---|---|---|
-| Source and verification evidence | The supplied public GitHub repository | Available after publication |
-| Resume showcase | GitHub Pages with screenshots, architecture and honest test results | Static page remains available independently of the Mac; proposed URL `https://shivam0870.github.io/atlas/` is **not live yet** |
+| Source and verification evidence | The supplied public GitHub repository | Published on `main` |
+| Resume showcase | GitHub Pages with screenshots, architecture and honest test results | Deployed at `https://shivam0870.github.io/atlas/`, independently of the Mac |
 | Full frontend and backend | Existing native Atlas runtime on the Mac, behind an ngrok free HTTPS endpoint | Requires the Mac awake, online and running Atlas and the tunnel |
 | Database, worker and local AI | A dedicated demo database/uploads and native local inference | No rented server or paid model API; existing computer, electricity and internet still required |
 | Email | Dedicated personal Gmail account, SMTP STARTTLS and an app password | Low-volume demo use; subject to account eligibility, sending limits and actual delivery verification |
@@ -18,7 +18,7 @@ The ngrok free plan includes a provider-assigned HTTPS development domain, 1 GB 
 
 ### Account setup needed from the owner
 
-1. Sign into GitHub locally using `gh auth login --hostname github.com --git-protocol https --web`. Complete the browser authentication yourself; do not paste a personal access token into chat. Publication will follow a tracked-file/history secret review and verification that the remote is still empty.
+1. **GitHub authentication completed.** The reviewed source and showcase were published after checking the current file set and all five prior commits against the secret-scanning baseline. Private configuration, models, database backups and local inbox data were excluded. Future authentication uses `gh auth login --hostname github.com --git-protocol https --web`; do not paste tokens into chat.
 2. If the Mac-based demo is acceptable, create a **free** [ngrok account](https://dashboard.ngrok.com/signup). Configure its authtoken privately through its documented setup, then share only the assigned public hostname. Account creation alone does not expose the Mac; start the endpoint only after the dedicated demo instance is ready.
 3. Create or choose a dedicated personal Gmail sender. Enable 2-Step Verification and create an Atlas-specific [Google app password](https://myaccount.google.com/apppasswords). Keep it in local private configuration, never in Git or chat. App passwords may be unavailable for some managed accounts or accounts with Advanced Protection. [Google requirements](https://support.google.com/accounts/answer/185833?hl=en).
 
@@ -26,7 +26,8 @@ SMTP settings for the dedicated demo configuration are `SMTP_HOST=smtp.gmail.com
 
 ### Remaining work before a public demo
 
-- Publish reviewed source and a static showcase after GitHub authentication.
+- **Completed:** publish reviewed source and a static showcase. Pages deployment [35369073606](https://github.com/shivam0870/atlas/actions/runs/35369073606) succeeded; public HTTPS returned 200. Chrome checks of the deployed page at 1440px and 390px passed for the screenshot, layout, keyboard skip link, section navigation and disclosure controls, with no page errors. Backend CI runs separately from static publication.
+- **Completed:** [GitHub CI 35369073611](https://github.com/shivam0870/atlas/actions/runs/35369073611) passed on product commit `86e87d6`: 89 backend tests, 16 frontend tests, 3 real account/onboarding browser journeys, migrations, static checks and frontend build. One local-model test was deselected; the complete seven-journey local suite and inference evidence remain separate. The human-reviewed corpus gate remains pending.
 - Provision isolated demo data and original-file storage; keep private local data, database ports and the development inbox inaccessible from the tunnel.
 - Set the dedicated instance's `APP_URL` to its actual HTTPS origin before testing cookies and email links.
 - Verify actual SMTP delivery, signup/reset, streamed answers, citations and follow-ups through the public hostname from another network.
@@ -149,4 +150,4 @@ Include a repository link, architecture diagram, screenshots, a short narrated d
 
 ## Current handoff
 
-The app is implemented and locally tested, with the container-inference limitation recorded above. Budget and repository are known. Public deployment is waiting on **GitHub authentication, confirmation of Mac availability for live demos, and tunnel/email account setup**. No custom-domain purchase is needed for the proposed free path. This preparation does not change the running local app, credentials or data.
+The source and static resume showcase are public. The app is implemented and locally tested, with the container-inference limitation recorded above. **Interactive deployment is waiting on confirmation of Mac availability for live demos and tunnel/email account setup.** No custom-domain purchase is needed for the proposed free path. Publication has not changed the running local app, credentials or data.

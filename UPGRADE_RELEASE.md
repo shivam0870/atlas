@@ -144,8 +144,18 @@ The command refuses an existing target, restores the dump, applies current migra
 
 ## Remaining verification and release boundaries
 
+### Public source and showcase — 18 September 2026
+
+Source and release artifacts are published at [shivam0870/atlas](https://github.com/shivam0870/atlas), with the static project showcase at [shivam0870.github.io/atlas](https://shivam0870.github.io/atlas/). The interactive backend remains local.
+
+[GitHub CI run 35369073611](https://github.com/shivam0870/atlas/actions/runs/35369073611) passed for product commit `86e87d6`: Ruff/type checks, formatting, frontend production build, **89 backend tests (1 model test deselected)**, **16 frontend tests**, fresh database migrations and **3 real Chrome account/onboarding journeys**. These remote browser checks are a subset of the seven local browser journeys above; hosted CI did not run local-model inference or the full document-to-answer journey. The separate corpus workflow correctly skipped retrieval evaluation because the human-reviewed baseline is not accepted.
+
+GitHub Pages deployment succeeded. Chrome checks against the actual public HTTPS page passed at 1440px and 390px: HTTP 200, screenshot loading, no horizontal overflow, keyboard skip link, section navigation, disclosure controls and no page errors. This verifies the static showcase, not a hosted Atlas API.
+
+### Still pending
+
 - Human-reviewed corpus quality is still pending owner review of the labels. The evaluation and review features work; existing synthetic/candidate results do not establish an approved production retrieval-quality score.
-- Remote CI execution, production deployment, real internet SMTP, a Kubernetes cluster deployment, formal screen-reader audit and production-scale load were not run. Historical load metrics in README/TEST_REPORT predate this product upgrade.
+- Interactive production deployment, real internet SMTP, a Kubernetes cluster deployment, formal screen-reader audit and production-scale load were not run. Historical load metrics in README/TEST_REPORT predate this product upgrade.
 - **F14 partial:** container inference needs a separately verified resource allocation; native delivery, migrations, recovery, image build and packaged account/UI flows passed. The shared reference Colima VM has 2 GiB and also runs unrelated services; those services were preserved. Final packaging evidence appears above.
 - Deferred proposal items, including OCR, enterprise SSO and public/shared conversations, remain outside this release.
 - Configure a real HTTPS `APP_URL`, SMTP delivery and protected persistent storage before any separately authorized non-local deployment. The current configuration is intentionally local and all model API spend remains zero.

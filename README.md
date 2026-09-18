@@ -2,6 +2,10 @@
 
 Atlas turns a workspace’s documents and service inventory into searchable, cited answers. It combines explicit hybrid retrieval, a bounded tool-using agent, PostgreSQL tenant isolation, durable background ingestion, and an operational console. Generation, embeddings, reranking, and the optional judge run locally. Paid model APIs are disabled.
 
+**[View the project showcase](https://shivam0870.github.io/atlas/)** · [Release and test evidence](UPGRADE_RELEASE.md) · [Deployment guide](DEPLOYMENT.md)
+
+The public showcase presents the product and architecture. The interactive application currently runs locally; public backend hosting and production email are pending.
+
 ![Atlas console](artifacts/atlas-upgrade-home.png)
 
 ## Use the running app
