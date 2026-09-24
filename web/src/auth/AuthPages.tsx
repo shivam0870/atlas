@@ -7,6 +7,8 @@ import {
   Check,
   Layers3,
   ShieldCheck,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { api, json, type AuthSession } from "../api/client";
 import { Button, ErrorNotice, Field, Notice } from "../components/ui";
@@ -22,13 +24,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           atlas<span className="brand-dot">.</span>
         </Link>
         <div className="auth-story-copy">
-          <span className="eyebrow">A HOME FOR WHAT YOUR TEAM KNOWS</span>
+          <span className="eyebrow">YOUR KNOWLEDGE, CONNECTED</span>
           <h1>
-            Good answers.
+            Less searching.
             <br />
-            Grounded in
+            More
             <br />
-            <em>your knowledge.</em>
+            <em>understanding.</em>
           </h1>
           <p>
             Bring your documents, people and everyday questions together in one
@@ -46,9 +48,44 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         </div>
-        <span className="auth-foot">Built for teams who want to know why.</span>
+        <div
+          className="knowledge-illustration"
+          aria-label="Illustration of the document-to-answer workflow"
+        >
+          <div className="illustration-label">
+            FROM INFORMATION TO UNDERSTANDING
+          </div>
+          <div className="illustration-docs">
+            <span>
+              <FileText size={18} /> Runbooks
+            </span>
+            <span>
+              <FileText size={18} /> Team guides
+            </span>
+            <span>
+              <FileText size={18} /> Documents
+            </span>
+          </div>
+          <div className="illustration-connection" aria-hidden="true">
+            <span />
+            <Layers3 size={24} />
+            <span />
+          </div>
+          <div className="illustration-answer">
+            <Sparkles size={20} />
+            <div>
+              <strong>An answer. With a source.</strong>
+              <p>Ask → understand → verify</p>
+            </div>
+            <span className="illustration-citation">[1]</span>
+          </div>
+        </div>
+        <span className="auth-foot">
+          <span className="status-dot" /> Private conversations. Verifiable
+          sources.
+        </span>
       </aside>
-      <main className="auth-main">
+      <main id="main-content" tabIndex={-1} className="auth-main">
         <div className="auth-mobile-brand">atlas.</div>
         <div className="auth-card">{children}</div>
         <p className="auth-privacy">Your conversations are private to you.</p>

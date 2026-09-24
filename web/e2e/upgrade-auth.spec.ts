@@ -223,7 +223,7 @@ test("real invitation, password reset session revocation and one-use MFA recover
   await login(secondPage, email);
   await page.goto(`${orgURL}/settings/account`);
   await page.getByRole("button", { name: "Set up", exact: true }).click();
-  await page.getByLabel("Current password").fill(password);
+  await page.getByLabel("Current password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Connect your authenticator" }),
@@ -284,7 +284,9 @@ test("real invitation, password reset session revocation and one-use MFA recover
     .getByRole("button", { name: "Send recovery instructions" })
     .click();
   await page.goto(await mailLink(request, email, "/reset-password"));
-  await page.getByLabel("New password").fill(`${password} changed`);
+  await page
+    .getByLabel("New password", { exact: true })
+    .fill(`${password} changed`);
   await page
     .getByRole("button", { name: "Reset password", exact: true })
     .click();

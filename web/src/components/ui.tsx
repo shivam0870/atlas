@@ -2,12 +2,20 @@ import {
   forwardRef,
   useRef,
   useId,
+  useState,
   type ButtonHTMLAttributes,
   type ReactNode,
   type InputHTMLAttributes,
 } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertCircle, BookOpen, LoaderCircle, X } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  LoaderCircle,
+  Eye,
+  EyeOff,
+  X,
+} from "lucide-react";
 export const Button = forwardRef<
   HTMLButtonElement,
   ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -42,15 +50,35 @@ export function Field({
 }) {
   const generatedId = useId();
   const id = props.id || generatedId;
+  const [visible, setVisible] = useState(false);
+  const password = props.type === "password";
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input
-        {...props}
-        id={id}
-        aria-invalid={!!error}
-        aria-describedby={hint || error ? `${id}-hint` : undefined}
-      />
+      <div className={password ? "password-field" : undefined}>
+        <input
+          {...props}
+          type={password && visible ? "text" : props.type}
+          id={id}
+          aria-invalid={!!error}
+          aria-describedby={hint || error ? `${id}-hint` : undefined}
+        />
+        {password && (
+          <button
+            type="button"
+            className="password-toggle"
+            aria-label={
+              visible
+                ? `Hide ${label.toLowerCase()}`
+                : `Show ${label.toLowerCase()}`
+            }
+            aria-pressed={visible}
+            onClick={() => setVisible(!visible)}
+          >
+            {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
       {(hint || error) && (
         <small id={`${id}-hint`} className={error ? "error-text" : ""}>
           {error || hint}

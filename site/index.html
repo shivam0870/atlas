@@ -293,22 +293,49 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="enhancements.css" />
+    <script src="enhancements.js" defer></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <div class="wrap">
-      <header>
+      <header class="site-header">
         <a class="brand" href="./" aria-label="Atlas home">atlas.</a>
-        <nav aria-label="Main navigation">
+        <nav id="navigation" aria-label="Main navigation">
           <a href="#product">Product</a><a href="#architecture">Architecture</a
           ><a href="#verification">Verification</a
           ><a href="https://github.com/shivam0870/atlas">GitHub ↗</a>
         </nav>
+        <div class="header-tools">
+          <button
+            id="search-open"
+            class="icon-button"
+            aria-label="Search this site"
+          >
+            ⌕
+          </button>
+          <button
+            id="theme-toggle"
+            class="icon-button"
+            aria-label="Switch to dark mode"
+          >
+            ◐
+          </button>
+          <button
+            id="menu-toggle"
+            class="icon-button"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="navigation"
+          >
+            ☰
+          </button>
+        </div>
       </header>
-      <main id="main">
+      <main id="main" tabindex="-1">
         <div class="hero">
           <p class="eyebrow">An engineering project by Shivam Kumar</p>
-          <h1>Your team's knowledge.<br />Answers with evidence.</h1>
+          <h1>Bring your knowledge<br /><em>into focus.</em></h1>
           <p class="lead">
             Atlas brings documents, service inventory and private conversations
             together. Ask a question, follow its sources, and keep access under
@@ -333,8 +360,8 @@
           <img
             src="assets/atlas-upgrade-home.png"
             alt="Atlas application home with a forest-green sidebar, company switcher, question form, knowledge library and workspace health indicators"
-            width="1280"
-            height="1310"
+            width="1440"
+            height="1442"
             fetchpriority="high"
           />
           <figcaption>
@@ -372,6 +399,56 @@
               </p>
             </article>
           </div>
+        </section>
+        <section id="faq" aria-labelledby="faq-heading">
+          <p class="eyebrow">A few useful answers</p>
+          <h2 id="faq-heading">Before you step inside.</h2>
+          <details>
+            <summary>How do I try Atlas?</summary>
+            <p>
+              Open the live app, create an account and verify your email. Create
+              a company, upload a document to Library, wait for indexing, then
+              ask a question. Follow its numbered citations to the source.
+            </p>
+          </details>
+          <details>
+            <summary>Are conversations private?</summary>
+            <p>
+              Conversations belong to their author. Company administrators do
+              not automatically gain access. Company, space and document
+              permissions also apply when you open sources from old answers.
+            </p>
+          </details>
+          <details>
+            <summary>Does the demo use paid AI APIs?</summary>
+            <p>
+              No. The demo runs local embedding, reranking and generation
+              models. Hosting depends on the developer’s Mac and its public
+              tunnel remaining online.
+            </p>
+          </details>
+          <details>
+            <summary>How can I run it myself?</summary>
+            <p>
+              The
+              <a href="https://github.com/shivam0870/atlas#readme"
+                >repository README</a
+              >
+              includes setup and verification instructions. PostgreSQL, Redis
+              and local models provide the backend services.
+            </p>
+          </details>
+          <div class="actions">
+            <a
+              class="button primary"
+              href="https://cavalry-habitable-sureness.ngrok-free.dev"
+              >Explore your workspace ↗</a
+            ><button class="button" id="copy-demo">Copy demo link</button
+            ><button class="button" id="print-page">
+              Print project overview
+            </button>
+          </div>
+          <p id="copy-feedback" role="status"></p>
         </section>
         <section id="architecture" aria-labelledby="architecture-heading">
           <p class="eyebrow">Architecture</p>
@@ -432,7 +509,7 @@
               </p>
             </div>
             <div class="card">
-              <span class="number">16</span>
+              <span class="number">21</span>
               <h3>Frontend tests passed</h3>
               <p>
                 Components and application state, alongside TypeScript and
@@ -478,11 +555,88 @@
         </section>
       </main>
       <footer>
-        <span>Atlas · Built by Shivam Kumar</span
+        <span
+          >Atlas · Built by Shivam Kumar<br />Last updated
+          <time datetime="2026-09-24">24 September 2026</time> ·
+          <button class="text-button" id="privacy-open">
+            Privacy preferences
+          </button></span
         ><a href="https://github.com/shivam0870/atlas/blob/main/DEPLOYMENT.md"
           >Hosting and deployment notes ↗</a
         >
       </footer>
     </div>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <div class="floating-tools">
+      <button class="icon-button" id="back-top" aria-label="Back to top" hidden>
+        ↑</button
+      ><button class="button primary" id="contact-open">Contact ↗</button>
+    </div>
+    <aside
+      class="cookie-banner"
+      aria-label="Cookie and privacy preferences"
+      hidden
+    >
+      <strong>A little clarity about privacy.</strong>
+      <p>
+        This showcase uses no sign-in cookies. It stores your theme and privacy
+        choice. Optional attribution remembers only UTM tags in this browser
+        session; nothing is sent to an analytics service.
+      </p>
+      <div class="actions">
+        <button class="button" id="essential-only">Essential only</button
+        ><button class="button primary" id="allow-attribution">
+          Allow attribution
+        </button>
+      </div>
+    </aside>
+    <dialog id="site-search" aria-labelledby="search-title">
+      <div class="dialog-heading">
+        <h2 id="search-title">Find your way.</h2>
+        <button class="icon-button" data-close aria-label="Close search">
+          ×
+        </button>
+      </div>
+      <label for="search-query">Search this project</label
+      ><input
+        id="search-query"
+        type="search"
+        placeholder="Try privacy, models or architecture…"
+        autocomplete="off"
+      />
+      <div id="search-results" aria-live="polite"></div>
+    </dialog>
+    <dialog id="contact" aria-labelledby="contact-title">
+      <div class="dialog-heading">
+        <h2 id="contact-title">Let’s make Atlas better.</h2>
+        <button class="icon-button" data-close aria-label="Close contact">
+          ×
+        </button>
+      </div>
+      <p>
+        Prepare an issue for the maintainer. Please leave out passwords and
+        private documents. You review and submit it on GitHub.
+      </p>
+      <form id="contact-form" novalidate>
+        <label for="issue-title">Subject</label
+        ><input id="issue-title" maxlength="120" required /><label
+          for="issue-body"
+          >What happened?</label
+        ><textarea
+          id="issue-body"
+          maxlength="2000"
+          rows="4"
+          required
+        ></textarea>
+        <p id="contact-error" role="alert"></p>
+        <button class="button primary" type="submit">Prepare issue</button>
+      </form>
+      <p id="contact-success" role="status" hidden>
+        Your draft is ready. Nothing has been sent.
+        <a id="issue-link" target="_blank" rel="noreferrer"
+          >Review and submit on GitHub ↗</a
+        >
+      </p>
+    </dialog>
   </body>
 </html>

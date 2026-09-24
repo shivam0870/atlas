@@ -35,7 +35,7 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:8100/ready
-          npm --prefix web run test:e2e -- e2e/upgrade-auth.spec.ts
+          npm --prefix web run test:e2e -- e2e/upgrade-auth.spec.ts e2e/experience.spec.ts
 
       - name: Report corpus evaluation gate
         run: |

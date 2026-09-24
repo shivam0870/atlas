@@ -67,6 +67,7 @@ export function AccountPage() {
         body: json({ name, theme }),
       });
       localStorage.setItem("atlas-theme", theme);
+      window.dispatchEvent(new Event("atlas:theme"));
       await client.invalidateQueries({ queryKey: sessionKey });
       setMessage("Profile updated.");
     });

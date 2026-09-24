@@ -31,7 +31,7 @@ jobs:
       - name: Assemble static showcase only
         run: |
           mkdir -p _site/assets
-          cp site/index.html _site/index.html
+          cp -R site/. _site/
           cp artifacts/atlas-upgrade-home.png _site/assets/
       - uses: actions/upload-pages-artifact@v4
         with:

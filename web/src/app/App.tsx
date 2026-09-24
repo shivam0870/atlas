@@ -53,20 +53,29 @@ import { WorkspaceRoutes } from "../features/WorkspaceRoutes";
 import { CommandPalette, NotificationButton } from "../features/Discovery";
 import { WorkspaceContext } from "./context";
 import { Button, ErrorNotice, Loading, initials } from "../components/ui";
+import {
+  ExperienceTools,
+  ThemeToggle,
+  readPreference,
+} from "../components/experience";
 function Theme() {
   const session = useSession();
   useEffect(() => {
-    const choice =
-      session.data?.user.theme ||
-      localStorage.getItem("atlas-theme") ||
-      "system";
+    const choice = () =>
+      readPreference("atlas-theme", session.data?.user.theme || "system");
     const media = matchMedia("(prefers-color-scheme: dark)");
     const apply = () =>
       (document.documentElement.dataset.theme =
-        choice === "system" ? (media.matches ? "dark" : "light") : choice);
+        choice() === "system" ? (media.matches ? "dark" : "light") : choice());
     apply();
     media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
+    window.addEventListener("atlas:theme", apply);
+    window.addEventListener("storage", apply);
+    return () => {
+      media.removeEventListener("change", apply);
+      window.removeEventListener("atlas:theme", apply);
+      window.removeEventListener("storage", apply);
+    };
   }, [session.data?.user.theme]);
   return null;
 }
@@ -77,7 +86,7 @@ function Entry() {
     return <Loading label="Opening your workspace…" />;
   if (session.error)
     return (
-      <main className="standalone">
+      <main id="main-content" tabIndex={-1} className="standalone">
         <ErrorNotice error={session.error} />
         <Button onClick={() => session.refetch()}>Try again</Button>
       </main>
@@ -165,7 +174,7 @@ function WorkspaceShell() {
   if (orgs.error) return <ErrorNotice error={orgs.error} />;
   if (!organization)
     return (
-      <main className="standalone">
+      <main id="main-content" tabIndex={-1} className="standalone">
         <h1>Workspace unavailable</h1>
         <p>
           Your membership may have changed. Choose a workspace you can access.
@@ -289,9 +298,6 @@ function WorkspaceShell() {
       }}
     >
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
       <div className="app-shell">
         <aside className="sidebar desktop-sidebar">{sidebar}</aside>
         <div className="main-column">
@@ -343,6 +349,7 @@ function WorkspaceShell() {
               <span>Search knowledge</span>
               <kbd>⌘ K</kbd>
             </button>
+            <ThemeToggle />
             <NotificationButton />
             <span className="role-tag">{organization.role}</span>
           </header>
@@ -371,7 +378,7 @@ function StandaloneAccount() {
   if (session.isPending) return <Loading />;
   if (!session.data) return <Navigate to="/login?next=/account" replace />;
   return (
-    <main className="standalone-account">
+    <main id="main-content" tabIndex={-1} className="standalone-account">
       <Link className="text-link" to="/onboarding">
         ← Your workspaces
       </Link>
@@ -383,6 +390,10 @@ export function App() {
   return (
     <>
       <Theme />
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <ExperienceTools />
       <Routes>
         <Route path="/" element={<Entry />} />
         <Route path="/login" element={<LoginPage />} />

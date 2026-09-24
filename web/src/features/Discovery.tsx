@@ -113,17 +113,15 @@ export function HomePage() {
   return (
     <>
       <PageHeader
-        eyebrow="YOUR TEAM’S KNOWLEDGE, WITH CONTEXT"
+        eyebrow="YOUR WORKSPACE, AT A GLANCE"
         title={`Welcome back, ${firstName}`}
-        description={`A little more clarity starts here in ${organization.name}.`}
+        description={`Pick up where you left off in ${organization.name}.`}
       />
       <section className="home-hero">
         <div>
-          <span className="eyebrow">ASK. UNDERSTAND. KEEP MOVING.</span>
+          <span className="eyebrow">A LITTLE CONTEXT. A CLEARER ANSWER.</span>
           <h2>
-            Your next answer
-            <br />
-            is already in your knowledge.
+            Your knowledge. <em>A clearer next step.</em>
           </h2>
           <p>
             Find the right document, understand a process, or connect the
@@ -158,6 +156,56 @@ export function HomePage() {
           </div>
         </form>
       </section>
+      <div className="workspace-overview" aria-label="Workspace overview">
+        <Link to={`${base}/library`}>
+          <span className="overview-icon">
+            <BookOpen size={21} />
+          </span>
+          <div>
+            <span className="overview-value">
+              {documents.isPending
+                ? "…"
+                : documents.error
+                  ? "—"
+                  : (documents.data?.total ?? 0)}
+            </span>
+            <span>Documents you can access</span>
+          </div>
+          <ArrowRight size={17} />
+        </Link>
+        <Link to={`${base}/ask`}>
+          <span className="overview-icon">
+            <History size={21} />
+          </span>
+          <div>
+            <span className="overview-value">
+              {threads.isPending
+                ? "…"
+                : threads.error
+                  ? "—"
+                  : (threads.data?.items.length ?? 0)}
+            </span>
+            <span>Recent conversations</span>
+          </div>
+          <ArrowRight size={17} />
+        </Link>
+        <Link to={`${base}/saved`}>
+          <span className="overview-icon">
+            <Bookmark size={21} />
+          </span>
+          <div>
+            <span className="overview-value">
+              {saved.isPending
+                ? "…"
+                : saved.error
+                  ? "—"
+                  : (saved.data?.items.length ?? 0)}
+            </span>
+            <span>Saved items</span>
+          </div>
+          <ArrowRight size={17} />
+        </Link>
+      </div>
       {(!documents.data?.total ||
         !threads.data?.items.length ||
         (canManage &&

@@ -6,7 +6,7 @@ export default defineConfig({
   timeout: 180000,
   expect: { timeout: 20000 },
   use: {
-    baseURL: "http://127.0.0.1:8100",
+    baseURL: process.env.ATLAS_BROWSER_URL || "http://127.0.0.1:8100",
     channel: "chrome",
     headless: true,
     trace: "off",

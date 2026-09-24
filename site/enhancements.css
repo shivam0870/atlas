@@ -1,0 +1,490 @@
+:root {
+  --surface: #fffef9;
+  --soft: #e5ebdd;
+  --accent: #214c35;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #edf3e6;
+  --muted: #aebdaa;
+  --paper: #111d16;
+  --line: #354b39;
+  --surface: #1b2b20;
+  --soft: #293e2d;
+  --accent: #c6dfab;
+}
+[hidden] {
+  display: none !important;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #a87d32;
+  outline-offset: 4px;
+}
+body {
+  background:
+    radial-gradient(ellipse at 85% 5%, var(--soft), transparent 40%),
+    var(--paper);
+}
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(16px);
+  padding: 18px 0;
+}
+.brand {
+  color: var(--accent);
+  font-size: 35px;
+}
+nav {
+  margin-left: auto;
+}
+.header-tools {
+  display: flex;
+  gap: 8px;
+}
+.icon-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+}
+#menu-toggle {
+  display: none;
+}
+.hero {
+  padding: 95px 0 60px;
+  max-width: 100%;
+}
+.hero h1 {
+  font-size: clamp(52px, 7.8vw, 102px);
+  letter-spacing: -4px;
+}
+.hero h1 em {
+  font-weight: 400;
+  color: var(--accent);
+}
+.hero .eyebrow {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+.hero .eyebrow:before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px var(--soft);
+}
+.hero .lead {
+  max-width: 675px;
+}
+.hero .status {
+  max-width: 620px;
+  font-size: 12px;
+}
+.button {
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
+}
+.button:hover,
+.icon-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 5px 14px #12332110;
+}
+.primary {
+  background: #214c35;
+  border-color: #214c35;
+  color: #f4f9ea;
+}
+[data-theme="dark"] .primary {
+  background: #c6dfab;
+  color: #183a26;
+}
+.preview {
+  border-radius: 20px;
+  box-shadow: 0 25px 65px #14362316;
+  background: var(--surface);
+}
+.preview:before {
+  content: "● ● ●   /   YOUR ATLAS WORKSPACE";
+  display: block;
+  padding: 15px 22px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.preview img {
+  aspect-ratio: 1440/1060;
+  object-fit: cover;
+  object-position: top;
+}
+section {
+  scroll-margin-top: 110px;
+  padding: 80px 0;
+}
+section .eyebrow {
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+h2 {
+  letter-spacing: -0.8px;
+}
+.grid {
+  margin-top: 35px;
+  gap: 18px;
+}
+.card {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 30px;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+.card h3 {
+  font-size: 18px;
+}
+.card p {
+  line-height: 1.8;
+}
+#product .card:before {
+  content: "↗";
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--soft);
+  color: var(--accent);
+  border-radius: 12px;
+  margin-bottom: 25px;
+}
+.number {
+  color: var(--accent);
+  font-size: 64px;
+}
+.stack li {
+  background: var(--soft);
+}
+.flow li {
+  border-color: var(--accent);
+}
+.flow li::before {
+  color: var(--accent);
+}
+details {
+  background: var(--surface);
+  border-radius: 12px;
+}
+summary:hover {
+  color: var(--accent);
+}
+footer {
+  padding-bottom: 110px;
+  font-size: 12px;
+}
+.text-button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  color: inherit;
+  font-size: inherit;
+}
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  height: 3px;
+  width: 0;
+  background: var(--accent);
+  z-index: 20;
+  pointer-events: none;
+}
+.floating-tools {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+.floating-tools .button {
+  border-radius: 30px;
+  box-shadow: 0 5px 20px #102b1920;
+}
+.cookie-banner {
+  position: fixed;
+  z-index: 10;
+  bottom: 20px;
+  left: 20px;
+  width: min(460px, calc(100% - 40px));
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 12px 60px #10291a30;
+  font-size: 14px;
+}
+.cookie-banner p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 10px 0;
+}
+.cookie-banner .actions {
+  margin-top: 15px;
+  gap: 8px;
+}
+.cookie-banner .button {
+  font-size: 12px;
+  padding: 10px 13px;
+}
+dialog {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 30px;
+  width: min(600px, calc(100% - 32px));
+  max-height: 85dvh;
+  box-shadow: 0 25px 90px #071b1540;
+}
+dialog[open] {
+  animation: appear 0.18s ease-out;
+}
+dialog::backdrop {
+  background: #071b1580;
+  backdrop-filter: blur(6px);
+}
+.dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+.dialog-heading h2 {
+  font-size: 32px;
+}
+.dialog-heading button {
+  flex-shrink: 0;
+}
+dialog p {
+  color: var(--muted);
+  font-size: 14px;
+}
+dialog label {
+  display: block;
+  font-size: 13px;
+  margin: 15px 0 8px;
+}
+dialog input,
+dialog textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+#search-results {
+  margin-top: 20px;
+}
+#search-results a {
+  display: block;
+  border-bottom: 1px solid var(--line);
+  padding: 15px 5px;
+  text-decoration: none;
+}
+#search-results a:hover {
+  background: var(--soft);
+}
+#contact-error {
+  color: #b84b37;
+}
+#contact-success {
+  padding: 15px;
+  background: var(--soft);
+  border-radius: 10px;
+}
+#copy-feedback {
+  font-size: 13px;
+  margin-top: 14px;
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 700px) {
+  .site-header {
+    align-items: center;
+    gap: 12px;
+  }
+  .header-tools {
+    margin-left: auto;
+  }
+  #menu-toggle {
+    display: grid;
+  }
+  nav {
+    display: none;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px #12332120;
+  }
+  nav.open {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero {
+    padding: 55px 0 40px;
+  }
+  .hero h1 {
+    letter-spacing: -2px;
+    font-size: clamp(43px, 9.5vw, 67px);
+  }
+  .hero .eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.4px;
+  }
+  section {
+    padding: 50px 0;
+  }
+  .grid {
+    gap: 14px;
+  }
+  .flow li {
+    padding: 15px 0;
+  }
+  .preview:before {
+    font-size: 8px;
+  }
+  .preview figcaption {
+    font-size: 11px;
+  }
+  dialog {
+    padding: 24px;
+  }
+  .cookie-banner {
+    left: 12px;
+    bottom: 12px;
+    width: calc(100% - 24px);
+  }
+  .floating-tools {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    --ink: #111;
+    --muted: #333;
+    --paper: white;
+    --surface: white;
+    --line: #bbb;
+    --soft: #eee;
+    --accent: #222;
+  }
+  .site-header,
+  .skip,
+  .floating-tools,
+  .cookie-banner,
+  dialog,
+  .scroll-progress,
+  button,
+  .hero .actions,
+  .preview {
+    display: none !important;
+  }
+  body {
+    background: white;
+    font-size: 11pt;
+  }
+  .wrap {
+    width: 100%;
+  }
+  .hero {
+    padding: 0 0 20px;
+  }
+  .hero h1 {
+    font-size: 40pt;
+  }
+  section {
+    padding: 25px 0;
+  }
+  .grid {
+    gap: 12px;
+  }
+  .card {
+    padding: 15px;
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  h2 {
+    font-size: 25pt;
+  }
+  details {
+    break-inside: avoid;
+  }
+  details::details-content {
+    content-visibility: visible;
+  }
+  footer {
+    padding: 20px 0;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
