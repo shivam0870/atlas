@@ -1,17 +1,17 @@
 :root {
-  --surface: #fffef9;
-  --soft: #e5ebdd;
-  --accent: #214c35;
+  --surface: #ffffff;
+  --soft: #eaf0f8;
+  --accent: #295bce;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #edf3e6;
-  --muted: #aebdaa;
-  --paper: #111d16;
-  --line: #354b39;
-  --surface: #1b2b20;
-  --soft: #293e2d;
-  --accent: #c6dfab;
+  --ink: #e7edf5;
+  --muted: #a7b5c8;
+  --paper: #0b1220;
+  --line: #2d3e55;
+  --surface: #111e30;
+  --soft: #1b3358;
+  --accent: #91b4ff;
 }
 [hidden] {
   display: none !important;
@@ -27,7 +27,7 @@ button {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #a87d32;
+  outline: 3px solid #295bce;
   outline-offset: 4px;
 }
 body {
@@ -114,20 +114,20 @@ nav {
 .icon-button:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
-  box-shadow: 0 5px 14px #12332110;
+  box-shadow: 0 5px 14px #14203110;
 }
 .primary {
-  background: #214c35;
-  border-color: #214c35;
-  color: #f4f9ea;
+  background: #295bce;
+  border-color: #295bce;
+  color: #f0f1f3;
 }
 [data-theme="dark"] .primary {
-  background: #c6dfab;
-  color: #183a26;
+  background: #91b4ff;
+  color: #0d1b2a;
 }
 .preview {
   border-radius: 20px;
-  box-shadow: 0 25px 65px #14362316;
+  box-shadow: 0 25px 65px #15223516;
   background: var(--surface);
 }
 .preview:before {
@@ -241,7 +241,7 @@ footer {
 }
 .floating-tools .button {
   border-radius: 30px;
-  box-shadow: 0 5px 20px #102b1920;
+  box-shadow: 0 5px 20px #111b2a20;
 }
 .cookie-banner {
   position: fixed;
@@ -253,7 +253,7 @@ footer {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
-  box-shadow: 0 12px 60px #10291a30;
+  box-shadow: 0 12px 60px #111b2830;
   font-size: 14px;
 }
 .cookie-banner p {
@@ -277,13 +277,13 @@ dialog {
   padding: 30px;
   width: min(600px, calc(100% - 32px));
   max-height: 85dvh;
-  box-shadow: 0 25px 90px #071b1540;
+  box-shadow: 0 25px 90px #0a101840;
 }
 dialog[open] {
   animation: appear 0.18s ease-out;
 }
 dialog::backdrop {
-  background: #071b1580;
+  background: #0a101880;
   backdrop-filter: blur(6px);
 }
 .dialog-heading {
@@ -371,7 +371,7 @@ dialog textarea {
     padding: 20px;
     border: 1px solid var(--line);
     border-radius: 14px;
-    box-shadow: 0 10px 30px #12332120;
+    box-shadow: 0 10px 30px #14203120;
   }
   nav.open {
     display: flex;

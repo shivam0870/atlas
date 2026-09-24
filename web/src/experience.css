@@ -1,34 +1,34 @@
-/* Atlas: warm paper, forest ink, and a clearer visual hierarchy. */
+/* Atlas: navy foundations, slate surfaces, and restrained blue accents. */
 :root {
-  --canvas: #f3f3ed;
-  --surface: #fffefa;
-  --surface-2: #ecefe7;
-  --text: #213b31;
-  --muted: #657367;
-  --border: #dce1d6;
-  --accent: #24563f;
-  --accent-hover: #163d2b;
-  --accent-soft: #e5efdf;
-  --sidebar: #142e24;
+  --canvas: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #eef2f6;
+  --text: #182230;
+  --muted: #5e6b7c;
+  --border: #dce3ec;
+  --accent: #295bce;
+  --accent-hover: #214caa;
+  --accent-soft: #eaf0fc;
+  --sidebar: #101c30;
   --radius: 16px;
-  --shadow: 0 12px 36px #193e2810;
+  --shadow: 0 12px 36px #19283e10;
 }
 :root[data-theme="dark"] {
-  --canvas: #111a16;
-  --surface: #1a2720;
-  --surface-2: #25372c;
-  --text: #edf2e5;
-  --muted: #b0c0b0;
-  --border: #354b3b;
-  --accent: #b2d79a;
-  --accent-hover: #c6e8b0;
-  --accent-soft: #294330;
-  --sidebar: #0d1e15;
+  --canvas: #0b1220;
+  --surface: #111e30;
+  --surface-2: #1b2b41;
+  --text: #e7edf5;
+  --muted: #a7b5c8;
+  --border: #2d3e55;
+  --accent: #91b4ff;
+  --accent-hover: #bed1ff;
+  --accent-soft: #1b3358;
+  --sidebar: #0a1424;
   --shadow: 0 12px 36px #0002;
 }
 ::selection {
-  background: #b4d599;
-  color: #142e24;
+  background: #a6b4c8;
+  color: #101c30;
 }
 html {
   scroll-behavior: smooth;
@@ -57,7 +57,7 @@ h1 {
   transform: translateY(0);
 }
 .button.primary {
-  box-shadow: 0 3px 8px #153b2912;
+  box-shadow: 0 3px 8px #17253912;
 }
 .button.secondary:hover {
   border-color: var(--accent);
@@ -122,7 +122,7 @@ select:focus {
 }
 .panel {
   border-radius: var(--radius);
-  box-shadow: 0 2px 6px #12331a03;
+  box-shadow: 0 2px 6px #14203103;
 }
 .page-heading {
   margin-bottom: 28px;
@@ -135,7 +135,7 @@ select:focus {
   letter-spacing: 1.8px;
 }
 .sidebar {
-  background: linear-gradient(160deg, #1b3b2c, var(--sidebar) 65%);
+  background: linear-gradient(160deg, #182942, var(--sidebar) 65%);
   padding-top: 30px;
 }
 .sidebar .brand {
@@ -144,12 +144,12 @@ select:focus {
 }
 .brand-mark {
   border-radius: 11px;
-  background: #c5dfad16;
+  background: #b9c4d316;
 }
 .sidebar nav {
   gap: 4px;
   scrollbar-width: thin;
-  scrollbar-color: #52705c transparent;
+  scrollbar-color: #4b5d77 transparent;
 }
 .sidebar nav a {
   padding: 11px 13px;
@@ -157,17 +157,17 @@ select:focus {
   font-size: 12px;
 }
 .sidebar nav a.active {
-  background: #d4e9b7;
-  color: #163b27;
-  border-color: #e5f2d0;
+  background: #e5edff;
+  color: #173d82;
+  border-color: #c4d4f8;
   box-shadow: 0 3px 12px #0001;
 }
 .sidebar nav a.active svg {
-  color: #244f33;
+  color: #214caa;
 }
 .sidebar nav a:hover:not(.active) {
-  background: #e4f2dc0c;
-  border-color: #e4f2dc12;
+  background: #e4e6ea0c;
+  border-color: #e4e6ea12;
 }
 .org-selector {
   margin-bottom: 24px;
@@ -212,10 +212,10 @@ select:focus {
   border-radius: 20px;
   padding: 38px;
   gap: 35px;
-  background: #1a3c2b;
-  color: #f0f4e5;
-  border: 1px solid #2a503a;
-  box-shadow: 0 12px 35px #18392412;
+  background: #14243c;
+  color: #f1f5fc;
+  border: 1px solid #2b3d58;
+  box-shadow: 0 12px 35px #17263a12;
 }
 .home-hero::before {
   content: "";
@@ -224,11 +224,11 @@ select:focus {
   height: 380px;
   top: -220px;
   left: 20%;
-  border: 1px solid #cbe4b622;
+  border: 1px solid #c2cbd822;
   border-radius: 50%;
   box-shadow:
-    0 0 0 40px #cbe4b608,
-    0 0 0 80px #cbe4b606;
+    0 0 0 40px #c2cbd808,
+    0 0 0 80px #c2cbd806;
   pointer-events: none;
 }
 .home-hero > * {
@@ -245,26 +245,26 @@ select:focus {
 .home-hero h2 em {
   display: block;
   font-weight: 400;
-  color: #cde4ad;
+  color: #b8ceff;
 }
 .home-hero .eyebrow {
-  color: #b6d19f;
+  color: #b6c9ea;
 }
 .home-hero p {
-  color: #becfb8;
+  color: #bcc8d8;
   max-width: 340px;
 }
 .home-hero form {
-  background: #fffef8;
-  color: #3d5945;
-  border: 1px solid #d7e4ce;
-  box-shadow: 0 8px 25px #071f191a;
+  background: #ffffff;
+  color: #3a485c;
+  border: 1px solid #d0d8e2;
+  box-shadow: 0 8px 25px #0b121b1a;
   border-radius: 14px;
   padding: 20px;
 }
 .home-hero textarea {
   background: transparent;
-  color: #25432f;
+  color: #182230;
   border: 0;
   box-shadow: none;
   padding: 3px;
@@ -272,20 +272,20 @@ select:focus {
   font-size: 15px;
 }
 .home-hero textarea::placeholder {
-  color: #596c58;
+  color: #596a80;
 }
 .home-hero form .button.primary {
-  background: #24563f;
+  background: #295bce;
   color: white;
 }
 .home-hero form .button.primary:hover {
-  background: #163d2b;
+  background: #214caa;
 }
 .home-hero form .button:disabled {
   opacity: 0.55;
 }
 .home-hero form .row > span {
-  color: #536b52;
+  color: #586a80;
 }
 .workspace-overview {
   display: grid;
@@ -380,12 +380,12 @@ select:focus {
   padding: 4px 9px;
 }
 .modal-overlay {
-  background: #081b1580;
+  background: #0a101980;
   backdrop-filter: blur(7px);
 }
 .modal-content {
   border-radius: 20px;
-  box-shadow: 0 30px 90px #071b1540;
+  box-shadow: 0 30px 90px #0a101840;
   animation: dialog-enter 0.16s ease-out;
 }
 .modal-content.side {
@@ -459,7 +459,7 @@ select:focus {
 .auth-story {
   padding: 42px clamp(36px, 6vw, 96px);
   background:
-    radial-gradient(ellipse at 10% 95%, #40603966, transparent 50%), #153b2b;
+    radial-gradient(ellipse at 10% 95%, #3b4a5e66, transparent 50%), #14243c;
 }
 .auth-story:after {
   width: 900px;
@@ -481,7 +481,7 @@ select:focus {
   margin: 26px 0;
 }
 .auth-story h1 em {
-  color: #c9e3a5;
+  color: #b8ceff;
 }
 .auth-story p {
   max-width: 390px;
@@ -500,22 +500,22 @@ select:focus {
 .status-dot {
   width: 6px;
   height: 6px;
-  background: #c9e3a5;
+  background: #b8ceff;
   border-radius: 50%;
   display: inline-block;
-  box-shadow: 0 0 0 4px #c9e3a50d;
+  box-shadow: 0 0 0 4px #b6c2d20d;
 }
 .knowledge-illustration {
   position: relative;
   z-index: 1;
-  border: 1px solid #cde4af24;
+  border: 1px solid #bdc7d624;
   border-radius: 16px;
   padding: 22px;
   max-width: 430px;
   background: #ffffff04;
 }
 .illustration-label {
-  color: #acc898;
+  color: #9eadc2;
   font-size: 8px;
   letter-spacing: 1.7px;
   margin-bottom: 20px;
@@ -529,50 +529,50 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border: 1px solid #cde4af22;
+  border: 1px solid #bdc7d622;
   border-radius: 8px;
   padding: 12px 10px;
-  color: #d3e1c8;
+  color: #cbd3de;
   font-size: 10px;
-  background: #d8e8c508;
+  background: #cdd5e008;
 }
 .illustration-docs svg {
-  color: #a8c397;
+  color: #9aaac0;
 }
 .illustration-connection {
   display: flex;
   align-items: center;
   gap: 13px;
   justify-content: center;
-  color: #cce5b3;
+  color: #c0cad8;
   padding: 14px 0;
 }
 .illustration-connection span {
   width: 60px;
   height: 1px;
-  background: #cde4af33;
+  background: #bdc7d633;
 }
 .illustration-answer {
   display: flex;
   gap: 12px;
   align-items: center;
   padding: 15px;
-  background: #e1ecd2;
+  background: #e3ebfb;
   border-radius: 10px;
-  color: #20482e;
+  color: #213854;
 }
 .illustration-answer strong {
   font-size: 12px;
 }
 .illustration-answer p {
   margin: 3px 0 0;
-  color: #52634a;
+  color: #52647c;
   font-size: 10px;
 }
 .illustration-citation {
   margin-left: auto;
   font-size: 12px;
-  border: 1px solid #91b282;
+  border: 1px solid #8396b1;
   border-radius: 5px;
   padding: 3px 5px;
 }
@@ -588,7 +588,7 @@ select:focus {
   background: var(--surface);
   padding: 36px;
   border-radius: 20px;
-  box-shadow: 0 22px 65px #203c2410;
+  box-shadow: 0 22px 65px #1b2b4110;
 }
 .auth-card h1 {
   font-family: "Instrument Serif", Georgia, serif;
@@ -644,7 +644,7 @@ select:focus {
   align-items: flex-end;
 }
 .floating-tools .button {
-  box-shadow: 0 5px 20px #102a2720;
+  box-shadow: 0 5px 20px #111b2920;
 }
 .help-launcher {
   border-radius: 30px;
@@ -661,7 +661,7 @@ select:focus {
   width: min(470px, calc(100% - 40px));
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 12px 60px #10291a30;
+  box-shadow: 0 12px 60px #111b2830;
   border-radius: 16px;
   padding: 22px;
 }
@@ -752,7 +752,7 @@ select:focus {
 }
 [data-theme="dark"] .auth-story {
   background:
-    radial-gradient(ellipse at 10% 95%, #36542b66, transparent 50%), #112e20;
+    radial-gradient(ellipse at 10% 95%, #253b5a66, transparent 50%), #0c182b;
 }
 @media (min-width: 1700px) {
   .page-content {

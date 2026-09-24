@@ -2,7 +2,17 @@
 
 Updated: 24 September 2026
 
-The application and public showcase now share a forest-green, warm-paper visual style, clearer typography, stronger page hierarchy, responsive spacing and consistent controls. The workspace overview uses real permission-scoped document, conversation and saved-item data.
+The application and public showcase now share a professional navy, slate and blue palette, clearer typography, stronger page hierarchy, responsive spacing and consistent controls. The workspace overview uses real permission-scoped document, conversation and saved-item data.
+
+### Color palette
+
+- Navy foundation: `#101C30`; hero panels: `#14243C`.
+- Light surfaces: `#FFFFFF` and `#F5F7FA`; primary text: `#182230`.
+- Primary blue: `#295BCE`; hover: `#214CAA`; subtle selection: `#EAF0FC`.
+- Dark surfaces: `#0B1220` and `#111E30`; text: `#E7EDF5`; accent: `#91B4FF`.
+- Green remains a semantic success indicator; errors retain their distinct red treatment.
+
+Checked primary text, secondary text, buttons and hero text combinations exceed 4.5:1 contrast in both themes. This is a palette check, not a full accessibility certification.
 
 ## Requested features
 

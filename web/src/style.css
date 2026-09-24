@@ -10,38 +10,38 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --canvas: #f5f6f3;
+  --canvas: #f3f4f6;
   --surface: #fff;
-  --surface-2: #edf1ec;
-  --text: #20342c;
-  --muted: #62736b;
-  --border: #dce4dd;
-  --accent: #225c43;
-  --accent-hover: #174831;
-  --accent-soft: #e7f2e9;
+  --surface-2: #eceef1;
+  --text: #18273c;
+  --muted: #526683;
+  --border: #dcdfe4;
+  --accent: #295bce;
+  --accent-hover: #214caa;
+  --accent-soft: #eaecef;
   --danger: #a53636;
   --danger-soft: #fff0ee;
-  --shadow: 0 12px 50px #14332412;
+  --shadow: 0 12px 50px #15213212;
   --radius: 13px;
-  --sidebar: #142f26;
-  --focus: #3b8b62;
+  --sidebar: #131f30;
+  --focus: #295bce;
   --success: #256441;
 }
 :root[data-theme="dark"] {
-  --canvas: #111c18;
-  --surface: #192820;
-  --surface-2: #20352b;
-  --text: #e3eee6;
-  --muted: #a6b9ad;
-  --border: #31483b;
-  --accent: #8ccca5;
-  --accent-hover: #a5deb8;
-  --accent-soft: #234630;
+  --canvas: #0d1520;
+  --surface: #131e2e;
+  --surface-2: #19283c;
+  --text: #e5e8ec;
+  --muted: #9dacc2;
+  --border: #233856;
+  --accent: #99a9bf;
+  --accent-hover: #b3bfd0;
+  --accent-soft: #1e314b;
   --danger: #ffb3a8;
   --danger-soft: #432820;
   --shadow: 0 12px 50px #0003;
-  --sidebar: #0a1912;
-  --focus: #9bddb0;
+  --sidebar: #0a1019;
+  --focus: #91b4ff;
   --success: #a3dcad;
 }
 * {
@@ -170,7 +170,7 @@ input[type="checkbox"] {
   background: var(--accent-hover);
 }
 [data-theme="dark"] .button.primary {
-  color: #0d2919;
+  color: #0d1b2a;
 }
 .button.secondary {
   background: var(--surface);
@@ -526,7 +526,7 @@ input[type="checkbox"] {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: #071c176b;
+  background: #0a10196b;
   z-index: 80;
   backdrop-filter: blur(3px);
 }
@@ -612,8 +612,8 @@ input[type="checkbox"] {
   grid-template-columns: minmax(380px, 46%) 1fr;
 }
 .auth-story {
-  background: #163b2a;
-  color: #ecf4e6;
+  background: #17263a;
+  color: #eaedf0;
   display: flex;
   flex-direction: column;
   padding: 46px 11%;
@@ -624,14 +624,14 @@ input[type="checkbox"] {
   content: "";
   width: 650px;
   height: 650px;
-  border: 1px solid #d5ebc817;
+  border: 1px solid #d1d8e217;
   border-radius: 50%;
   position: absolute;
   bottom: -350px;
   right: -340px;
   box-shadow:
-    0 0 0 75px #d5ebc807,
-    0 0 0 150px #d5ebc806;
+    0 0 0 75px #d1d8e207,
+    0 0 0 150px #d1d8e206;
   pointer-events: none;
 }
 .brand {
@@ -648,11 +648,11 @@ input[type="checkbox"] {
   width: 35px;
   height: 35px;
   border-radius: 9px;
-  background: #b7dcb917;
-  color: #d6e9bd;
+  background: #bdc7d617;
+  color: #c9d1dd;
 }
 .brand-dot {
-  color: #b9d894;
+  color: #a5b3c7;
   margin-left: -10px;
 }
 .auth-story-copy {
@@ -662,7 +662,7 @@ input[type="checkbox"] {
   z-index: 1;
 }
 .auth-story-copy .eyebrow {
-  color: #bdd4b6;
+  color: #b8c3d2;
   font-size: 9px;
   letter-spacing: 2px;
 }
@@ -675,12 +675,12 @@ input[type="checkbox"] {
   margin: 30px 0;
 }
 .auth-story h1 em {
-  color: #d8e9b5;
+  color: #c4cdda;
   font-weight: 400;
 }
 .auth-story p {
   max-width: 350px;
-  color: #c3d6c8;
+  color: #c1cbd8;
   line-height: 1.8;
 }
 .story-points {
@@ -689,7 +689,7 @@ input[type="checkbox"] {
   flex-direction: column;
   gap: 18px;
   font-size: 12px;
-  color: #d4e2d3;
+  color: #d2d9e3;
 }
 .story-points span {
   display: flex;
@@ -697,11 +697,11 @@ input[type="checkbox"] {
   gap: 10px;
 }
 .story-points svg {
-  color: #bcdb9e;
+  color: #adbacc;
 }
 .auth-foot {
   font-size: 11px;
-  color: #a3bea9;
+  color: #9eadc3;
 }
 .auth-main {
   background: var(--canvas);
@@ -799,7 +799,7 @@ input[type="checkbox"] {
   width: 235px;
   flex-shrink: 0;
   background: var(--sidebar);
-  color: #d8e6dc;
+  color: #dbdee3;
   padding: 27px 17px 18px;
   display: flex;
   flex-direction: column;
@@ -828,19 +828,19 @@ input[type="checkbox"] {
 .org-selector select {
   appearance: none;
   background: transparent;
-  color: #eff5ed;
+  color: #eff1f3;
   border: 0;
   min-width: 0;
   font-size: 12px;
   padding: 13px 0;
 }
 .org-selector option {
-  background: #153c29;
+  background: #17263a;
   color: white;
 }
 .org-selector > svg {
   flex-shrink: 0;
-  color: #afc3b6;
+  color: #a9b6c9;
 }
 .sidebar nav {
   display: flex;
@@ -855,7 +855,7 @@ input[type="checkbox"] {
   gap: 12px;
   padding: 11px 13px;
   font-size: 12px;
-  color: #b2c8bb;
+  color: #aebacc;
   border-radius: 7px;
   font-weight: 500;
 }
@@ -864,17 +864,17 @@ input[type="checkbox"] {
   color: #fff;
 }
 .sidebar nav a.active {
-  background: #c5e3bd15;
-  color: #e1f0d6;
+  background: #c5cedb15;
+  color: #dfe2e7;
 }
 .sidebar nav a.active svg {
-  color: #c8e5b6;
+  color: #c2ccd9;
 }
 .nav-label {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.4px;
-  color: #829d8d;
+  color: #768ba9;
   padding: 24px 13px 6px;
 }
 .sidebar-bottom {
@@ -902,7 +902,7 @@ input[type="checkbox"] {
 }
 .account-link small {
   display: block;
-  color: #91ad9b;
+  color: #899bb5;
   font-size: 10px;
   margin-top: 4px;
 }
@@ -913,13 +913,13 @@ input[type="checkbox"] {
   height: 33px;
   border-radius: 50%;
   font-size: 11px;
-  background: #c2d7b21f;
-  color: #dcebcf;
+  background: #b7c2d21f;
+  color: #d8dce2;
   flex-shrink: 0;
 }
 .sidebar-bottom .button {
   padding: 8px;
-  color: #9cbaa7;
+  color: #98a8be;
 }
 .main-column {
   margin-left: 235px;
@@ -991,7 +991,7 @@ input[type="checkbox"] {
   top: 18px;
   background: transparent;
   border: 0;
-  color: #dcebdc;
+  color: #e0e3e7;
   padding: 8px;
 }
 .mobile-sidebar .brand {
@@ -2064,8 +2064,8 @@ details > summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
-  background: #183e2d;
-  color: #eaf3e6;
+  background: #19283d;
+  color: #eaecef;
   padding: 38px;
   border-radius: 15px;
   margin-bottom: 28px;
@@ -2074,7 +2074,7 @@ details > summary {
 }
 .home-hero > .eyebrow,
 .home-hero .eyebrow {
-  color: #b5cead;
+  color: #aebbcd;
   font-size: 9px;
 }
 .home-hero h2 {
@@ -2086,21 +2086,21 @@ details > summary {
 }
 .home-hero p {
   font-size: 12px;
-  color: #bfd5c3;
+  color: #bec8d6;
   max-width: 350px;
   line-height: 1.8;
 }
 .home-hero form {
   align-self: center;
   padding: 15px;
-  background: #f8faf5;
+  background: #f6f7f9;
   border-radius: 12px;
-  color: #23392c;
-  border: 1px solid #ecf2e4;
+  color: #1b2b41;
+  border: 1px solid #e8ebee;
 }
 .home-hero textarea {
   background: transparent;
-  color: #23392c;
+  color: #1b2b41;
   border: 0;
   min-height: 95px;
   resize: none;
@@ -2108,7 +2108,7 @@ details > summary {
   padding: 7px;
 }
 .home-hero textarea::placeholder {
-  color: #6c7e70;
+  color: #5a7190;
 }
 .home-hero form .row {
   gap: 8px;
@@ -2118,11 +2118,11 @@ details > summary {
   display: flex;
   gap: 6px;
   align-items: center;
-  color: #738374;
+  color: #5f7697;
   font-size: 9px;
 }
 .home-hero .button {
-  background: #285d40;
+  background: #334052;
   color: white;
   font-size: 11px;
 }
