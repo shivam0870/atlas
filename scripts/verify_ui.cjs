@@ -189,6 +189,29 @@ async function fits(page) {
         page.getByText("Database: Ready", { exact: true }),
       ).toBeVisible();
       await screenshot(page, "home-desktop");
+      await page.getByRole("button", { name: "Help and contact" }).click();
+      await page.getByRole("button", { name: "Privacy preferences" }).click();
+      // First-visit choices must not obstruct persistent account navigation.
+      for (const width of [768, 1024, 1440]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const signOut = page.getByRole("button", {
+          name: "Sign out",
+          exact: true,
+        });
+        expect(
+          await signOut.evaluate((el) => {
+            const rect = el.getBoundingClientRect();
+            return el.contains(
+              document.elementFromPoint(
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2,
+              ),
+            );
+          }),
+        ).toBe(true);
+        await fits(page);
+      }
+      await page.getByRole("button", { name: "Essential only" }).click();
       await page.getByRole("button", { name: "Switch to dark mode" }).click();
       await page.reload();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

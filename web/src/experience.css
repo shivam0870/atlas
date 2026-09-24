@@ -907,6 +907,19 @@ select:focus {
     scroll-behavior: auto !important;
   }
 }
+/* A privacy choice must never cover the persistent workspace navigation. */
+@media (min-width: 761px) {
+  .privacy-banner.workspace-privacy {
+    left: 230px;
+    width: min(470px, calc(100% - 250px));
+  }
+}
+@media (min-width: 1101px) {
+  .privacy-banner.workspace-privacy {
+    left: 255px;
+    width: min(470px, calc(100% - 275px));
+  }
+}
 @media print {
   :root,
   :root[data-theme="dark"] {

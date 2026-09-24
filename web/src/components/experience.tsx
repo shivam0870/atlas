@@ -235,7 +235,7 @@ export function ExperienceTools() {
       </div>
       {privacy && (
         <section
-          className="privacy-banner"
+          className={`privacy-banner ${workspace ? "workspace-privacy" : ""}`}
           aria-label="Cookie and privacy preferences"
         >
           <ShieldCheck size={23} />
