@@ -46,3 +46,9 @@ Private execution artifacts are under `.local/workbench-e2e/` and `artifacts/pri
 ## Boundaries
 
 This is functional, security-regression, and recovery-readiness evidence, not a sustained load/soak test or a completed human-reviewed answer-quality evaluation. The public GitHub browser scenario deliberately used an unavailable repository; successful synchronization was checked with approved local folders. Signature refresh availability, external repository availability, and production capacity still require operating checks in the deployment environment.
+
+## Subsequent public deployment verification — 2026-09-25
+
+Application commit `74c4425` passed [hosted engineering CI](https://github.com/shivam0870/atlas/actions/runs/36101046984) and deployed to the configured public HTTPS origin. Twelve additional pure deployment-guard tests passed. The public-instance restore drill verified 12 table hashes, all 10 original files and application-role isolation.
+
+The final complete `scripts/public_deployment_smoke.cjs` invocation passed all five grouped checks, with zero browser errors: secure login; five tabs and Operations; real upload/scanning/indexing; real local-model generation with exact version evidence; cross-tenant document/version denial followed by company switching and mobile navigation. This public run reused a synthetic fixture account and did not send email. The selector and login-timeout corrections in the smoke harness were validated by that clean run; they did not alter product behavior. Private evidence is under `.local/public-demo/production-smoke/`.

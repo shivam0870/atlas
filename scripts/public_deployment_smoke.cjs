@@ -100,7 +100,7 @@ async function step(name, action) {
         .fill(account.email);
       await page.getByLabel("Password", { exact: true }).fill(account.password);
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
-      await expect(page).toHaveURL(/\/onboarding/);
+      await expect(page).toHaveURL(/\/onboarding/, { timeout: 30000 });
       const session = (await context.cookies()).find(
         (cookie) => cookie.name === "atlas_user_session",
       );
@@ -229,7 +229,7 @@ async function step(name, action) {
         expect(denied.status()).toBe(404);
       }
       await page
-        .getByLabel("Current workspace", { exact: true })
+        .getByRole("combobox", { name: "Current workspace", exact: true })
         .selectOption(fixture.other_organization);
       await expect(page).toHaveURL(
         new RegExp(`/o/${fixture.other_organization}$`),

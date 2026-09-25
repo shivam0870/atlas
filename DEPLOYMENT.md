@@ -4,9 +4,11 @@ Updated 18 September 2026. **The interactive app is now exposed through HTTPS:**
 
 ## Current ₹0 deployment
 
+The 25 September 2026 upgrade is deployed to this existing endpoint: five new workbench tabs, runtime controls and Operations, with schema `023` and a dedicated backup scheduler. Its public-database restore drill passed. See [current rollout evidence](PRODUCTION_UPGRADE_REPORT.md) for the commit, checks and remaining production acceptance boundaries.
+
 The real React frontend and FastAPI backend share one ngrok HTTPS origin. PostgreSQL, Redis, original files and local Qwen inference run on the existing Mac. The public instance has separate demo data and runtime configuration. The Mac must remain awake and online; the static showcase remains available independently.
 
-**[Public demo startup, backup, configuration and verification](PUBLIC_DEMO.md)** is the operating guide for this instance. Public upload, indexing, streamed answers, citations, follow-ups, mobile evidence and refresh checks passed. Gmail SMTP authentication and signup sending passed; the owner's inbox verification click remains pending. Public reset/invitation email clicks and a restore of this new demo backup have not been verified.
+**[Public demo startup, backup, configuration and verification](PUBLIC_DEMO.md)** is the operating guide for this instance. Public upload, indexing, streamed answers, citations, follow-ups, mobile evidence and refresh checks passed. Gmail SMTP authentication and signup sending passed; the owner's inbox verification click remains pending. Public reset/invitation email clicks have not been verified. The public backup restoration check passed on 25 September 2026.
 
 No hosting purchase or paid model API was used. ngrok's free plan has usage limits and a browser welcome screen; it includes a provider-assigned HTTPS domain. [Current ngrok limits](https://ngrok.com/docs/pricing-limits/free-plan-limits). GitHub Pages serves the static project showcase. [GitHub Pages availability](https://docs.github.com/en/pages/getting-started-with-github-pages).
 

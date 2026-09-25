@@ -72,4 +72,12 @@ The SMTP TLS change also passed seven isolated account regression tests, Ruff an
 
 Recovery must target a new database first: verify the bundle hashes, restore `atlas.dump` using `pg_restore --exit-on-error`, retain the matching MFA key and upload files, and apply migrations using the private migration configuration. Stop demo writers before switching every database URL in its `.env`, `worker.env` and `migration.env` to the recovered database; update `instance.json` as well. Use isolated Redis queues/caches, then verify login, files and old citations before reopening. Preserve the original database and backup until recovery passes. Never use down-migrations or delete Docker volumes as a recovery shortcut.
 
-The original project's recovery rehearsal is recorded in `UPGRADE_RELEASE.md`. A new public-demo restore rehearsal has not been performed; do not describe this public endpoint as production-ready or highly available.
+The original project's recovery rehearsal is recorded in `UPGRADE_RELEASE.md`. A dedicated public-demo restore drill passed on 25 September 2026: 12 document/access table hashes and all 10 original uploads matched, and unscoped application-role reads remained blocked. The recovered database was retained for inspection; the live database was not switched. This demo still depends on the host Mac and is not a highly available deployment.
+
+## Workbench deployment — 25 September 2026
+
+Commit `74c4425` deployed migration `023`, Sources, Compare, Knowledge Map, Playbooks, Briefings and Operations to the existing HTTPS origin. Dedicated API, worker, tunnel, keep-awake process and operator scheduler are running. The GitHub Pages showcase was updated in the same release.
+
+Private snapshots were created before and after migration. The post-upgrade bundle is `.local/public-demo/.local/backups/atlas-20260925T060313121711`; the completed restore record is `.local/public-demo/.local/recovery-drills/a7e6dba7-68f1-4b3f-97cb-0f8f7d8469d9.json`. Configuration, fixture credentials and backups remain outside Git.
+
+The full `scripts/public_deployment_smoke.cjs` run passed through the public HTTPS origin: secure fixture login, all five tabs, Operations and scanner readiness, real upload/indexing, an actual local-model answer with an exact version citation, cross-tenant document/version denial, company switching and mobile navigation. It reported zero browser errors. The initial harness selector and login-timeout issues were corrected before the clean run. The check used an existing synthetic account and sent no signup, invitation or reset emails. Private results and screenshots are in `.local/public-demo/production-smoke/`.
