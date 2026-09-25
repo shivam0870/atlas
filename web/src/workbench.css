@@ -1,0 +1,221 @@
+.workbench-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.workbench-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(150px, 1fr);
+  gap: 16px;
+  max-width: 800px;
+  margin-bottom: 22px;
+}
+.workbench-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.workbench-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.workbench-card h2,
+.workbench-card p {
+  margin-bottom: 0;
+}
+.workbench-card .workbench-actions {
+  margin-top: auto;
+}
+.break-word {
+  overflow-wrap: anywhere;
+}
+.workbench-facts {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.workbench-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+.workbench-facts dt {
+  color: var(--muted);
+}
+.workbench-facts dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.workbench-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 20px;
+  margin: 16px 0 22px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.source-passage {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 100%;
+}
+.comparison-change pre {
+  padding: 18px;
+  border-radius: 8px;
+  margin: 0;
+}
+.diff-removed {
+  background: var(--danger-soft);
+  border-left: 3px solid var(--danger);
+}
+.diff-added {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--success);
+}
+.knowledge-graph {
+  width: 100%;
+  max-height: 540px;
+  display: block;
+  overflow: visible;
+}
+.knowledge-graph line {
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+.knowledge-graph line.selected {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.graph-node {
+  cursor: pointer;
+}
+.graph-node circle {
+  fill: var(--surface-2);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.graph-node.selected circle,
+.graph-node:hover circle {
+  fill: var(--accent-soft);
+  stroke-width: 3;
+}
+.graph-node:focus-visible {
+  outline: none;
+}
+.graph-node:focus-visible circle {
+  stroke: var(--focus);
+  stroke-width: 5;
+}
+.graph-node text {
+  font:
+    12px "DM Sans",
+    sans-serif;
+  fill: var(--text);
+}
+.graph-node .graph-symbol {
+  font-weight: 700;
+  font-size: 14px;
+}
+.relationship-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.relationship-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+.relationship-list li p {
+  margin: 8px 0;
+}
+.playbook-step,
+.workbench-picker {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0;
+}
+.playbook-step legend,
+.workbench-picker legend {
+  font-size: 13px;
+  font-weight: 650;
+  padding: 0 8px;
+}
+.workbench-picker {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.playbook-step .workbench-actions {
+  margin-top: 16px;
+}
+.briefing-source {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+.briefing-source blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+  margin: 18px 0;
+  color: var(--muted);
+}
+.operations-health {
+  margin-bottom: 22px;
+}
+.operations-health .panel p {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+.release-record {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+.release-record summary {
+  cursor: pointer;
+  font-size: 14px;
+}
+.publication-controls {
+  margin: 0 0 18px;
+}
+@media (max-width: 720px) {
+  .workbench-columns,
+  .workbench-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workbench-columns {
+    gap: 16px;
+  }
+  .relationship-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .workbench-summary {
+    gap: 12px 20px;
+  }
+  .workbench-card {
+    padding: 20px;
+  }
+  .knowledge-graph text:not(.graph-symbol) {
+    font-size: 15px;
+  }
+}

@@ -2,6 +2,8 @@
 
 Atlas turns a workspace’s documents and service inventory into searchable, cited answers. It combines explicit hybrid retrieval, a bounded tool-using agent, PostgreSQL tenant isolation, durable background ingestion, and an operational console. Generation, embeddings, reranking, and the optional judge run locally. Paid model APIs are disabled.
 
+The [production hardening and workbench upgrade](PRODUCTION_UPGRADE.md) adds Sources, Compare, Knowledge Map, Playbooks and Briefings, with publication controls, verified source passages, ClamAV upload scanning, fair tenant scheduling and operations/recovery evidence. Uploads require a running scanner; see the linked setup and release requirements.
+
 **[Open Atlas — live demo](https://cavalry-habitable-sureness.ngrok-free.dev)** · [Project showcase](https://shivam0870.github.io/atlas/) · [Release evidence](UPGRADE_RELEASE.md)
 
 The live demo serves the complete UI and API through HTTPS while the host Mac is awake and online. Choose **Visit Site** if ngrok shows its welcome screen, then register, verify your email, create a workspace and upload a document. See [public demo operations](PUBLIC_DEMO.md) for availability, startup and verification limits. The project showcase stays available independently of the Mac.

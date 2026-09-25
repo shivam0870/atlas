@@ -46,12 +46,12 @@ async def retrieve(
             vectors = await (
                 await conn.execute(
                     """
-                SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,d.updated_at document_updated_at,d.review_due_at,
+                SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,v.effective_at,v.publication_status,d.owner_user_id,d.updated_at document_updated_at,d.review_due_at,
                   1-(e.embedding <=> %s::vector) similarity
                 FROM atlas.chunks c JOIN atlas.embeddings e ON e.tenant_id=c.tenant_id AND e.chunk_id=c.id
                 JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
                 LEFT JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id
-                WHERE c.tenant_id=%s AND c.collection_id=%s AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id
+                WHERE c.tenant_id=%s AND c.collection_id=%s AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id AND EXISTS (SELECT 1 FROM atlas.document_versions pv WHERE pv.tenant_id=d.tenant_id AND pv.id=c.version_id AND pv.publication_status='published' AND pv.effective_at<=now())
                 AND (%s::uuid[] IS NULL OR d.space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR d.id=ANY(%s::uuid[]))
                 ORDER BY e.embedding <=> %s::vector LIMIT 20
             """,
@@ -77,7 +77,7 @@ async def retrieve(
                         """
                     WITH corpus AS MATERIALIZED (
                       SELECT c.* FROM atlas.chunks c JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
-                      WHERE c.tenant_id=%s AND c.collection_id=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id
+                      WHERE c.tenant_id=%s AND c.collection_id=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id AND EXISTS (SELECT 1 FROM atlas.document_versions pv WHERE pv.tenant_id=d.tenant_id AND pv.id=c.version_id AND pv.publication_status='published' AND pv.effective_at<=now())
                       AND (%s::uuid[] IS NULL OR d.space_id=ANY(%s::uuid[])) AND (%s::uuid[] IS NULL OR d.id=ANY(%s::uuid[]))
                     ), stats AS (SELECT count(*)::float n,avg(token_count)::float avgdl FROM corpus),
                     terms AS (SELECT DISTINCT unnest(lexemes) term FROM ts_debug('english',%s)),
@@ -108,12 +108,12 @@ async def retrieve(
             if extra:
                 additional = await (
                     await conn.execute(
-                        """SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,d.updated_at document_updated_at,d.review_due_at,
+                        """SELECT c.id,c.document_id,c.content,c.start_offset,c.end_offset,d.title,d.source_key,c.version_id,v.number version_number,v.source_segments,v.created_at version_created_at,v.effective_at,v.publication_status,d.owner_user_id,d.updated_at document_updated_at,d.review_due_at,
                   1-(e.embedding <=> %s::vector) similarity FROM atlas.chunks c
                   JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
                   JOIN atlas.embeddings e ON e.tenant_id=c.tenant_id AND e.chunk_id=c.id
                   LEFT JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id
-                  WHERE c.tenant_id=%s AND c.id=ANY(%s) AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id""",
+                  WHERE c.tenant_id=%s AND c.id=ANY(%s) AND e.model_revision=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id IS NOT DISTINCT FROM d.current_version_id AND EXISTS (SELECT 1 FROM atlas.document_versions pv WHERE pv.tenant_id=d.tenant_id AND pv.id=c.version_id AND pv.publication_status='published' AND pv.effective_at<=now())""",
                         (vector_literal(query_vector), tenant_id, extra, model_revision()),
                     )
                 ).fetchall()
@@ -150,10 +150,16 @@ async def retrieve(
             )
             if row.get("review_due_at"):
                 row["review_due_at"] = row["review_due_at"].isoformat()
-            for timestamp in ["version_created_at", "document_updated_at"]:
+            for timestamp in ["version_created_at", "document_updated_at", "effective_at"]:
                 if row.get(timestamp):
                     row[timestamp] = row[timestamp].isoformat()
+            if row.get("owner_user_id"):
+                row["owner_user_id"] = str(row["owner_user_id"])
             row["score"] = scores[row["id"]]
             row["vector_rank"] = vector_ranks.get(row["id"])
             row["lexical_rank"] = lexical_ranks.get(row["id"])
-        return ordered[:top_k], query_vector, str(coll["id"]), coll["revision"]
+        from atlas.evidence_safety import flag_possible_conflicts
+
+        selected = ordered[:top_k]
+        flag_possible_conflicts(selected)
+        return selected, query_vector, str(coll["id"]), coll["revision"]

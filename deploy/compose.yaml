@@ -26,9 +26,22 @@ x-runtime: &runtime
   GLOBAL_PAID_SPEND_LIMIT_USD: "0"
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "2"
+  UPLOAD_SCANNER_HOST: clamav
+  UPLOAD_SCANNER_PORT: "3310"
+  UPLOAD_SCAN_REQUIRED: "true"
   OTEL_ENABLED: "false"
 
 services:
+  clamav:
+    image: clamav/clamav-debian:1.5.4
+    restart: unless-stopped
+    volumes: [scanner_data:/var/lib/clamav]
+    healthcheck:
+      test: [CMD, clamdscan, --ping, '3']
+      interval: 30s
+      timeout: 10s
+      start_period: 180s
+      retries: 5
   proxy:
     image: caddy:2.11.4-alpine
     restart: unless-stopped
@@ -130,6 +143,7 @@ services:
       model-pull: {condition: service_completed_successfully}
       redis: {condition: service_healthy}
       cache: {condition: service_healthy}
+      clamav: {condition: service_healthy}
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8100/ready', timeout=3)"]
       interval: 15s
@@ -154,6 +168,7 @@ services:
       cache: {condition: service_healthy}
 
 volumes:
+  scanner_data:
   postgres_data:
   queue_data:
   retrieval_models:

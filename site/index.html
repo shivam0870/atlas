@@ -400,6 +400,59 @@
             </article>
           </div>
         </section>
+        <section id="workbench" aria-labelledby="workbench-heading">
+          <p class="eyebrow">Five new ways to work</p>
+          <h2 id="workbench-heading">Keep company knowledge useful.</h2>
+          <div class="grid">
+            <article class="card">
+              <h3>Sources</h3>
+              <p>
+                Connect public GitHub repositories or approved folders, schedule
+                imports, and inspect synchronization history.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Compare</h3>
+              <p>
+                Compare documents and versions with exact before-and-after
+                passages and links to the evidence.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Knowledge Map</h3>
+              <p>
+                Explore permitted documents, services, teams and the
+                relationships that connect them.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Playbooks</h3>
+              <p>
+                Turn source documents into checklists, assign steps, track
+                approvals and flag changed source versions.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Briefings</h3>
+              <p>
+                Follow selected knowledge with private daily or weekly updates
+                and links to the exact changed passages.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Operations &amp; recovery</h3>
+              <p>
+                Inspect service health, failed jobs, tenant limits, alerts and
+                recorded backup and restoration checks.
+              </p>
+            </article>
+          </div>
+          <p class="note">
+            Uploads are scanned before parsing. Answers must pass citation
+            verification; when generation is unavailable, permitted source
+            excerpts remain available.
+          </p>
+        </section>
         <section id="faq" aria-labelledby="faq-heading">
           <p class="eyebrow">A few useful answers</p>
           <h2 id="faq-heading">Before you step inside.</h2>
@@ -501,15 +554,15 @@
           </h2>
           <div class="grid">
             <div class="card">
-              <span class="number">90</span>
+              <span class="number">142</span>
               <h3>Backend tests passed</h3>
               <p>
-                Recorded local suite covering accounts, permissions, tenancy,
-                retrieval and service behavior.
+                141 suite checks plus a real inference-outage regression,
+                covering accounts, permissions, tenancy and service behavior.
               </p>
             </div>
             <div class="card">
-              <span class="number">21</span>
+              <span class="number">29</span>
               <h3>Frontend tests passed</h3>
               <p>
                 Components and application state, alongside TypeScript and
@@ -517,11 +570,12 @@
               </p>
             </div>
             <div class="card">
-              <span class="number">7</span>
+              <span class="number">12</span>
               <h3>Real browser journeys passed</h3>
               <p>
-                Local Chrome journeys against the actual application, including
-                identity and knowledge workflows.
+                Every journey has passing evidence. The full run passed 11 of
+                12; the unchanged authentication rerun passed all 3 after a
+                transient connection reset.
               </p>
             </div>
           </div>
@@ -549,7 +603,7 @@
             </p>
           </details>
           <a
-            href="https://github.com/shivam0870/atlas/blob/main/UPGRADE_RELEASE.md"
+            href="https://github.com/shivam0870/atlas/blob/main/PRODUCTION_UPGRADE_REPORT.md"
             >Read the release report and test artifacts →</a
           >
         </section>
@@ -557,7 +611,7 @@
       <footer>
         <span
           >Atlas · Built by Shivam Kumar<br />Last updated
-          <time datetime="2026-09-24">24 September 2026</time> ·
+          <time datetime="2026-09-25">25 September 2026</time> ·
           <button class="text-button" id="privacy-open">
             Privacy preferences
           </button></span

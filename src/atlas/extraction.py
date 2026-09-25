@@ -4,7 +4,9 @@ import asyncio
 import base64
 import io
 import json
+import os
 import sys
+import tempfile
 import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -17,6 +19,7 @@ MAX_EXPANDED_BYTES = 20 * 1024 * 1024
 MAX_CHARACTERS = 1_000_000
 MAX_PAGES = settings.max_document_pages
 SUPPORTED = {".txt", ".md", ".pdf", ".docx"}
+WORKER_SCRIPT = str(Path(__file__).resolve())
 
 
 class ExtractionError(ValueError):
@@ -164,11 +167,26 @@ async def extract_upload(filename: str, data: bytes) -> ExtractedDocument:
     """Run parsers in a disposable process; terminate malformed/slow documents."""
     if len(data) > MAX_UPLOAD_BYTES:
         raise ExtractionError("Upload a file no larger than 20 MB")
+    from atlas.upload_safety import scan_upload
+
+    await scan_upload(filename, data)
+    sandbox = tempfile.TemporaryDirectory(prefix="atlas-parser-")
+    # No inherited credentials, proxy settings, home directory, or project .env.
+    # An absolute module path works for editable installs without PYTHONPATH.
     process = await asyncio.create_subprocess_exec(
         sys.executable,
-        "-m",
-        "atlas.extraction",
+        "-I",
+        "-B",
+        WORKER_SCRIPT,
         "--worker",
+        cwd=sandbox.name,
+        env={
+            "PATH": os.defpath,
+            "LANG": "C.UTF-8",
+            "HOME": sandbox.name,
+            "MAX_FILE_BYTES": str(MAX_UPLOAD_BYTES),
+            "MAX_DOCUMENT_PAGES": str(MAX_PAGES),
+        },
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
@@ -183,6 +201,8 @@ async def extract_upload(filename: str, data: bytes) -> ExtractedDocument:
             process.kill()
             await process.wait()
         raise
+    finally:
+        sandbox.cleanup()
     if process.returncode:
         raise ExtractionError("Document extraction failed or exceeded resource limits")
     result = json.loads(stdout)
@@ -196,8 +216,38 @@ if __name__ == "__main__":
     import resource
 
     resource.setrlimit(resource.RLIMIT_CPU, (15, 16))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
     if sys.platform != "darwin":
         resource.setrlimit(resource.RLIMIT_AS, (768 * 1024 * 1024, 768 * 1024 * 1024))
+
+    # CPython audit hooks prevent Python-based parsers from opening network sockets
+    # or spawning children. Production also runs this process in the container's
+    # non-root, read-only filesystem; this hook is defense in depth, not an OS sandbox.
+    parser_read_roots = tuple(
+        str(item.resolve()) + os.sep
+        for item in (Path(sys.prefix), Path(sys.base_prefix), Path(__file__).parent)
+    )
+
+    def parser_audit(event, args):
+        if event in {
+            "socket.connect",
+            "socket.bind",
+            "socket.getaddrinfo",
+            "subprocess.Popen",
+            "os.system",
+            "os.posix_spawn",
+        }:
+            raise PermissionError("Parser network and child processes are disabled")
+        if event == "open" and isinstance(args[0], (str, bytes)):
+            target = os.path.realpath(os.fsdecode(args[0]))
+            if not target.startswith(parser_read_roots):
+                raise PermissionError("Parser access outside runtime libraries is disabled")
+            if isinstance(args[2], int) and args[2] & (os.O_WRONLY | os.O_RDWR | os.O_CREAT):
+                raise PermissionError("Parser filesystem writes are disabled")
+
+    sys.addaudithook(parser_audit)
     try:
         body = json.loads(sys.stdin.buffer.read(MAX_UPLOAD_BYTES * 2))
         result = asdict(

@@ -2,7 +2,7 @@
 
 import asyncio
 import hashlib
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import quote
@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from psycopg import sql
-from psycopg.errors import ForeignKeyViolation
+from psycopg.errors import ForeignKeyViolation, InsufficientResources
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field, field_validator
 
@@ -60,6 +60,13 @@ class TextBody(BaseModel):
     content: str = Field(min_length=1, max_length=1_000_000)
     space_id: UUID | None = None
     replace_document_id: UUID | None = None
+    publication_status: Literal["draft", "published"] = "published"
+    effective_at: datetime | None = None
+
+
+class PublicationBody(BaseModel):
+    publication_status: Literal["draft", "published", "superseded", "archived"]
+    effective_at: datetime | None = None
 
 
 class DocumentPatch(BaseModel):
@@ -523,7 +530,7 @@ async def library(
         ).fetchone()
         rows = await (
             await conn.execute(
-                f"SELECT d.id,d.title,d.space_id,d.media_type,d.status,d.lifecycle,d.tags,d.owner_user_id,d.review_due_at,d.restricted,d.current_version_id,d.pending_version_id,d.created_at,d.updated_at,length(d.content) characters,v.status pending_status FROM atlas.documents d LEFT JOIN atlas.document_versions v ON v.tenant_id=d.tenant_id AND v.id=d.pending_version_id WHERE {clause} ORDER BY {order} LIMIT %s OFFSET %s",
+                f"SELECT d.id,d.title,d.space_id,d.media_type,d.status,d.lifecycle,d.tags,d.owner_user_id,d.review_due_at,d.restricted,d.current_version_id,d.pending_version_id,d.created_at,d.updated_at,length(d.content) characters,published.publication_status,published.effective_at,v.status pending_status FROM atlas.documents d LEFT JOIN atlas.document_versions published ON published.tenant_id=d.tenant_id AND published.id=d.current_version_id LEFT JOIN atlas.document_versions v ON v.tenant_id=d.tenant_id AND v.id=d.pending_version_id WHERE {clause} ORDER BY {order} LIMIT %s OFFSET %s",
                 [*params, page_size, (page - 1) * page_size],
             )
         ).fetchall()
@@ -532,9 +539,26 @@ async def library(
 
 
 async def store_document(
-    identity, title, filename, extracted, data, space_id=None, replace_id=None
+    identity,
+    title,
+    filename,
+    extracted,
+    data,
+    space_id=None,
+    replace_id=None,
+    publication_status="published",
+    effective_at=None,
+    source_key=None,
 ):
     require(identity, "write")
+    from atlas.upload_safety import scan_upload
+
+    await scan_upload(filename, data if data is not None else extracted.content.encode())
+    effective_at = effective_at or datetime.now(UTC)
+    if effective_at.tzinfo is None:
+        raise HTTPException(422, "Effective date must include a timezone")
+    if publication_status == "published" and effective_at > datetime.now(UTC):
+        raise HTTPException(422, "Future effective dates require a draft; publish when effective")
     tenant, version_id = identity.tenant_id, uuid4()
     storage_key = str(uuid4()) if data is not None else None
     content_hash = hashlib.sha256(extracted.content.encode()).hexdigest()
@@ -611,6 +635,23 @@ async def store_document(
                         (tenant, space_id, content_hash),
                     )
                 ).fetchone()
+                if duplicate and source_key:
+                    recovered = await (
+                        await conn.execute(
+                            "SELECT id,current_version_id,pending_version_id FROM atlas.documents WHERE tenant_id=%s AND source_key=%s AND content_hash=%s AND lifecycle!='trashed'",
+                            (tenant, source_key, content_hash),
+                        )
+                    ).fetchone()
+                    if recovered:
+                        # Retry after a crash between document commit and source mapping commit.
+                        if path:
+                            await asyncio.to_thread(path.unlink, missing_ok=True)
+                        return {
+                            "id": recovered["id"],
+                            "version_id": recovered["pending_version_id"]
+                            or recovered["current_version_id"],
+                            "status": "existing",
+                        }
                 if duplicate:
                     raise HTTPException(
                         409,
@@ -627,7 +668,7 @@ async def store_document(
                             tenant,
                             uuid4(),
                             title,
-                            str(uuid4()),
+                            source_key or str(uuid4()),
                             content_hash,
                             extracted.content,
                             extracted.media_type,
@@ -639,7 +680,7 @@ async def store_document(
                 number = 1
             assert doc
             await conn.execute(
-                "INSERT INTO atlas.document_versions(tenant_id,id,document_id,number,title,content,content_hash,media_type,filename,storage_key,byte_size,source_segments,status) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')",
+                "INSERT INTO atlas.document_versions(tenant_id,id,document_id,number,title,content,content_hash,media_type,filename,storage_key,byte_size,source_segments,status,publication_status,effective_at,approved_by) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending',%s,%s,%s)",
                 (
                     tenant,
                     version_id,
@@ -653,6 +694,9 @@ async def store_document(
                     storage_key,
                     len(data) if data else len(extracted.content.encode()),
                     Jsonb(extracted.segments),
+                    publication_status,
+                    effective_at,
+                    owner(identity) if publication_status == "published" else None,
                 ),
             )
             await conn.execute(
@@ -667,9 +711,11 @@ async def store_document(
                 "status": "queued",
                 **job,
             }
-    except BaseException:
+    except BaseException as exc:
         if path:
             await asyncio.to_thread(path.unlink, missing_ok=True)
+        if isinstance(exc, InsufficientResources):
+            raise HTTPException(429, "Workspace storage or daily upload limit reached") from exc
         raise
 
 
@@ -686,6 +732,8 @@ async def upload_text(body: TextBody, identity: Identity = Depends(authenticate)
         body.content.encode(),
         body.space_id,
         body.replace_document_id,
+        body.publication_status,
+        body.effective_at,
     )
 
 
@@ -695,6 +743,8 @@ async def upload_file(
     space_id: UUID | None = Form(None),
     title: str | None = Form(None),
     replace_document_id: UUID | None = Form(None),
+    publication_status: Literal["draft", "published"] = Form("published"),
+    effective_at: datetime | None = Form(None),
     identity: Identity = Depends(authenticate),
 ):
     require(identity, "write")
@@ -712,6 +762,8 @@ async def upload_file(
         data,
         space_id,
         replace_document_id,
+        publication_status,
+        effective_at,
     )
 
 
@@ -722,7 +774,7 @@ async def document_detail(document_id: UUID, identity: Identity = Depends(authen
         await accessible(conn, "document", document_id)
         return await (
             await conn.execute(
-                "SELECT d.*,v.number,v.source_segments,p.status pending_status FROM atlas.documents d LEFT JOIN atlas.document_versions v ON v.tenant_id=d.tenant_id AND v.id=d.current_version_id LEFT JOIN atlas.document_versions p ON p.tenant_id=d.tenant_id AND p.id=d.pending_version_id WHERE d.tenant_id=%s AND d.id=%s",
+                "SELECT d.*,v.number,v.source_segments,v.publication_status,v.effective_at,p.status pending_status FROM atlas.documents d LEFT JOIN atlas.document_versions v ON v.tenant_id=d.tenant_id AND v.id=d.current_version_id LEFT JOIN atlas.document_versions p ON p.tenant_id=d.tenant_id AND p.id=d.pending_version_id WHERE d.tenant_id=%s AND d.id=%s",
                 (identity.tenant_id, document_id),
             )
         ).fetchone()
@@ -773,7 +825,7 @@ async def versions(document_id: UUID, identity: Identity = Depends(authenticate)
         await accessible(conn, "document", document_id)
         return await (
             await conn.execute(
-                "SELECT id,number,title,media_type,filename,byte_size,source_segments,status,created_at FROM atlas.document_versions WHERE tenant_id=%s AND document_id=%s ORDER BY number DESC",
+                "SELECT id,number,title,media_type,filename,byte_size,source_segments,status,publication_status,effective_at,published_at,approved_by,created_at FROM atlas.document_versions WHERE tenant_id=%s AND document_id=%s ORDER BY number DESC",
                 (identity.tenant_id, document_id),
             )
         ).fetchall()
@@ -1065,3 +1117,73 @@ async def bulk_edit(body: BulkBody, identity: Identity = Depends(authenticate)):
             )
         await invalidate(conn, identity.tenant_id)
     return {"updated": len(ids)}
+
+
+@router.patch("/library/{document_id}/versions/{version_id}/publication")
+async def publish_version(
+    document_id: UUID,
+    version_id: UUID,
+    body: PublicationBody,
+    identity: Identity = Depends(authenticate),
+):
+    require(identity, "write")
+    async with transaction(identity.tenant_id) as conn:
+        await accessible(conn, "document", document_id, True)
+        document = await (
+            await conn.execute(
+                "SELECT * FROM atlas.documents WHERE id=%s FOR UPDATE", (document_id,)
+            )
+        ).fetchone()
+        version = await (
+            await conn.execute(
+                "SELECT * FROM atlas.document_versions WHERE document_id=%s AND id=%s FOR UPDATE",
+                (document_id, version_id),
+            )
+        ).fetchone()
+        if not document or not version:
+            raise HTTPException(404, "Source version unavailable")
+        effective = body.effective_at or version["effective_at"]
+        if effective.tzinfo is None:
+            raise HTTPException(422, "Effective date must include a timezone")
+        if body.publication_status == "published":
+            if version["status"] != "ready" or document["lifecycle"] != "active":
+                raise HTTPException(
+                    409, "Only a fully indexed version in an active document can be published"
+                )
+            if effective > datetime.now(UTC):
+                raise HTTPException(422, "Keep future versions in draft and publish when effective")
+            await conn.execute(
+                "UPDATE atlas.document_versions SET publication_status='superseded' WHERE document_id=%s AND id<>%s AND publication_status='published' AND status='ready'",
+                (document_id, version_id),
+            )
+            await conn.execute(
+                "UPDATE atlas.documents SET current_version_id=%s,content=%s,content_hash=%s,title=%s,media_type=%s,status='ready',updated_at=now() WHERE id=%s",
+                (
+                    version_id,
+                    version["content"],
+                    version["content_hash"],
+                    version["title"],
+                    version["media_type"],
+                    document_id,
+                ),
+            )
+        elif document["current_version_id"] == version_id:
+            # Explicitly unpublishing removes this version from retrieval; older policies do not revive implicitly.
+            await conn.execute(
+                "UPDATE atlas.documents SET current_version_id=NULL,updated_at=now() WHERE id=%s",
+                (document_id,),
+            )
+        row = await (
+            await conn.execute(
+                "UPDATE atlas.document_versions SET publication_status=%s,effective_at=%s,published_at=CASE WHEN %s='published' THEN now() ELSE published_at END,approved_by=%s WHERE id=%s RETURNING id,document_id,number,status,publication_status,effective_at,published_at,approved_by",
+                (
+                    body.publication_status,
+                    effective,
+                    body.publication_status,
+                    owner(identity),
+                    version_id,
+                ),
+            )
+        ).fetchone()
+        await invalidate(conn, identity.tenant_id)
+        return row

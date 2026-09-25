@@ -32,7 +32,8 @@ jobs:
         with: {version: '0.12.5'}
       - run: python3 scripts/configure.py
       - run: uv sync --locked
-      - run: docker compose up -d postgres redis cache
+      - name: Start database, queues and required malware scanner
+        run: docker compose --profile security up -d --wait --wait-timeout 600 postgres redis cache clamav
       - run: uv run alembic upgrade head
       - run: uv run python -m atlas.cli tenant 'Acme Engineering' acme
       - run: uv run python scripts/download_models.py

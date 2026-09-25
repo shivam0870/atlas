@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { verifiedOwner } from "./helpers";
-const origin = "http://127.0.0.1:8100";
+const origin = process.env.ATLAS_BROWSER_URL || "http://127.0.0.1:8100";
 const headers = { "X-Atlas-Client": "console", Origin: origin };
 // Upload/generation/citation/company-switch assertions from the old demo console
 // now live in upgrade-knowledge.spec.ts against individually authenticated users.

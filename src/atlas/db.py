@@ -39,6 +39,38 @@ application_pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] = AsyncCo
 transaction_pool: ContextVar[Any] = ContextVar("atlas_transaction_pool", default=None)
 
 
+async def verify_application_role():
+    """Refuse API startup with a role that can bypass or remove tenant policies."""
+    async with pool.connection() as conn:
+        role = await (
+            await conn.execute(
+                """SELECT current_user AS name, rolsuper, rolbypassrls,
+                EXISTS(SELECT 1 FROM pg_roles p WHERE (p.rolsuper OR p.rolbypassrls)
+                  AND pg_has_role(current_user,p.oid,'MEMBER')) AS privileged_membership
+                FROM pg_roles WHERE rolname=current_user"""
+            )
+        ).fetchone()
+        if (
+            not role
+            or role["name"] != "atlas_app"
+            or any(role[key] for key in ("rolsuper", "rolbypassrls", "privileged_membership"))
+        ):
+            raise RuntimeError("The API requires the unprivileged atlas_app database role")
+        unsafe = await (
+            await conn.execute(
+                """SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                WHERE n.nspname='atlas' AND c.relkind IN ('r','p') AND (
+                  pg_has_role(current_user,c.relowner,'MEMBER') OR
+                  ((c.relname='tenants' OR EXISTS(SELECT 1 FROM pg_attribute a WHERE a.attrelid=c.oid
+                    AND a.attname='tenant_id' AND NOT a.attisdropped))
+                   AND has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE')
+                   AND (NOT c.relrowsecurity OR NOT c.relforcerowsecurity))) LIMIT 1"""
+            )
+        ).fetchone()
+        if unsafe:
+            raise RuntimeError("Atlas requires forced RLS and non-owner runtime table privileges")
+
+
 @asynccontextmanager
 async def application_transactions():
     """Worker evaluation uses application privileges, never worker access to all tenant evidence."""

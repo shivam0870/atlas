@@ -901,6 +901,11 @@ export function CommandPalette({
     ["Search", "/search"],
     ["Saved items", "/saved"],
     ["Inventory", "/inventory"],
+    ["Sources", "/sources"],
+    ["Compare", "/compare"],
+    ["Knowledge Map", "/knowledge-map"],
+    ["Playbooks", "/playbooks"],
+    ["Briefings", "/briefings"],
     ["Notifications", "/notifications"],
     ...(canManage
       ? [

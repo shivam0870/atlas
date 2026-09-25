@@ -3,6 +3,7 @@ on: [push, pull_request]
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -18,7 +19,8 @@ jobs:
       - name: Check frontend formatting, components and production types
         run: npm run format:check && npm run test:unit && npm run build
         working-directory: web
-      - run: docker compose up -d --wait postgres redis cache mailpit
+      - name: Start database, queues, mail and required malware scanner
+        run: docker compose --profile security up -d --wait --wait-timeout 600 postgres redis cache mailpit clamav
       - run: uv run alembic upgrade head
       - run: uv run pytest -m 'not model' -q
       - name: Install browser for real account journeys

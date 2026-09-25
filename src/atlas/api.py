@@ -3,6 +3,7 @@ import hashlib
 import json
 import time
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
@@ -16,7 +17,8 @@ from atlas import serving
 from atlas.auth import Identity, authenticate, require
 from atlas.config import settings
 from atlas.db import transaction
-from atlas.generation import citations_valid, generate
+from atlas.evidence_safety import VERIFIER_REVISION, evidence_fallback, verify_answer
+from atlas.generation import generate
 from atlas.ingestion import collection, create_document, pipeline_hash
 from atlas.retrieval import retrieve
 from atlas.telemetry import cache_hits, latency, tokens, tracer
@@ -167,7 +169,7 @@ async def chunk(chunk_id: UUID, identity: Identity = Depends(authenticate)):
     async with transaction(identity.tenant_id) as conn:
         row = await (
             await conn.execute(
-                "SELECT c.*,d.title,v.number version_number,v.source_segments,v.content version_content,v.created_at version_created_at,d.updated_at document_updated_at FROM atlas.chunks c JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id WHERE c.tenant_id=%s AND c.id=%s AND d.status='ready' AND d.lifecycle='active' AND v.status='ready'",
+                "SELECT c.*,d.title,v.number version_number,v.source_segments,v.content version_content,v.created_at version_created_at,d.updated_at document_updated_at,d.review_due_at,v.publication_status,v.effective_at,(v.id IS DISTINCT FROM d.current_version_id OR v.publication_status<>'published') historical FROM atlas.chunks c JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id WHERE c.tenant_id=%s AND c.id=%s AND d.status='ready' AND d.lifecycle='active' AND v.status='ready'",
                 (identity.tenant_id, chunk_id),
             )
         ).fetchone()
@@ -199,6 +201,7 @@ async def search(body: Query, identity: Identity = Depends(authenticate)):
     require(identity, "query")
     quota = await serving.limits(identity.tenant_id)
     await serving.rate_limit(identity.tenant_id, quota["requests_per_minute"])
+    await serving.query_limit(identity.tenant_id)
     from atlas.conversations import authorization_revision, sources_available
 
     revision = await authorization_revision(identity)
@@ -242,6 +245,7 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
         raise HTTPException(422, "Document summaries use document retrieval mode")
     quota = await serving.limits(identity.tenant_id)
     await serving.rate_limit(identity.tenant_id, quota["requests_per_minute"])
+    await serving.query_limit(identity.tenant_id)
     query_id = uuid4()
     turn = None
     space_ids, document_ids = body.space_ids, body.document_ids
@@ -352,13 +356,15 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                 sort_keys=True,
             ).encode()
         ).hexdigest()
-        namespace += ":visibility:" + visibility
+        namespace += ":verification:" + VERIFIER_REVISION + ":visibility:" + visibility
         cached = (
             await serving.cache_lookup(namespace, prompt_question)
             if body.mode != "agent" and body.use_cache
             else None
         )
         if cached and not await sources_available(identity, cached["sources"] + turn_dependencies):
+            cached = None
+        if cached and not verify_answer(cached["answer"], cached["sources"]).supported:
             cached = None
         await serving.reserve(
             identity.tenant_id,
@@ -391,7 +397,8 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
         vector, cache_hit, revoked = [], False, False
         steps = []
         stage = "retrieving"
-        diagnostics = {}
+        diagnostics: dict[str, Any] = {}
+        verification = {}
         request_dependencies = list(turn_dependencies)
         meter = UsageMeter()
         meter_token = meter_context.set(meter)
@@ -492,6 +499,20 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                     sources = fit_sources(prompt_question, sources)
                 await verify_access()
                 yield event("sources", {"sources": sources})
+                if any(source.get("stale") for source in sources):
+                    yield event(
+                        "warning",
+                        {
+                            "message": "Some source documents are past their review date. Confirm their currency with the document owner."
+                        },
+                    )
+                if any(source.get("possible_conflict") for source in sources):
+                    yield event(
+                        "warning",
+                        {
+                            "message": "Some sources contain matching statements with different quantities. Inspect the passages and versions before relying on the answer."
+                        },
+                    )
                 if cache_hit:
                     status = "completed"
                     stage = "cached"
@@ -516,14 +537,31 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                                 break
                             await verify_access()
                             if item["type"] == "delta":
-                                if first_token is None:
-                                    first_token = (time.perf_counter() - start) * 1000
                                 answer += item["text"]
-                                yield event("delta", {"text": item["text"]})
                         else:
-                            status = (
-                                "completed" if citations_valid(answer, len(sources)) else "uncited"
-                            )
+                            stage = "verifying"
+                            yield event("metadata", {"stage": stage})
+                            check = verify_answer(answer, sources)
+                            verification = {
+                                "verification_method": check.method,
+                                "supported_claims": check.claims - check.rejected,
+                                "unsupported_claims": check.rejected,
+                            }
+                            if check.supported:
+                                status = "completed"
+                            else:
+                                answer = evidence_fallback(sources)
+                                status = "abstained"
+                                yield event(
+                                    "warning",
+                                    {
+                                        "message": "Unsupported answer withheld. Inspect the exact source passages or refine the question.",
+                                        **verification,
+                                    },
+                                )
+                            await verify_access()
+                            first_token = (time.perf_counter() - start) * 1000
+                            yield event("delta", {"text": answer})
                 await verify_access()
                 if (
                     status == "completed"
@@ -545,30 +583,54 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                         },
                     )
         except QueryStopped:
+            answer = ""
             status = "cancelled"
             diagnostics = failure_diagnostics(stage, "stopped")
         except asyncio.CancelledError:
+            answer = ""
             status = "cancelled"
             diagnostics = failure_diagnostics(stage, "worker_interrupted")
             raise
         except Exception as exc:
             status = "cancelled" if revoked else "failed"
-            diagnostics = failure_diagnostics(
-                stage, "access_changed" if revoked else failure_code(exc)
+            diagnostics = dict[str, Any](
+                failure_diagnostics(stage, "access_changed" if revoked else failure_code(exc))
             )
+            if not revoked and sources and stage == "generating":
+                try:
+                    await verify_access()
+                except Exception:
+                    revoked = True
+                else:
+                    answer = evidence_fallback(sources, unavailable=True)
+                    status = "abstained"
+                    diagnostics["search_fallback"] = True
+                    yield event(
+                        "warning",
+                        {
+                            "message": answer,
+                            "code": "generation_unavailable",
+                            "search_fallback": True,
+                        },
+                    )
+                    yield event("delta", {"text": answer})
             if revoked:
                 answer, sources, steps = "", [], []
-            yield event(
-                "error",
-                {
-                    "message": "Your access changed. The answer has been cleared; reload your workspace."
-                    if revoked
-                    else "The local model or search service is unavailable. Check System status and retry explicitly.",
-                    "code": diagnostics["error_code"],
-                    "reset": revoked,
-                    **diagnostics,
-                },
-            )
+            elif status == "failed":
+                # A partially generated, unverified answer must never be persisted.
+                answer = ""
+            if not diagnostics.get("search_fallback") or revoked:
+                yield event(
+                    "error",
+                    {
+                        "message": "Your access changed. The answer has been cleared; reload your workspace."
+                        if revoked
+                        else "The local model or search service is unavailable. Check System status and retry explicitly.",
+                        "code": diagnostics["error_code"],
+                        "reset": revoked,
+                        **diagnostics,
+                    },
+                )
         finally:
             duration = (time.perf_counter() - start) * 1000
             latency.record(
@@ -635,6 +697,7 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                                             "access_revoked": revoked,
                                             "steps": steps,
                                             **diagnostics,
+                                            **verification,
                                         }
                                     ),
                                     identity.tenant_id,
@@ -706,6 +769,7 @@ async def query(body: Query, request: Request, identity: Identity = Depends(auth
                 "input_tokens": meter.input_tokens,
                 "output_tokens": meter.output_tokens,
                 "reset": revoked,
+                **verification,
                 **diagnostics,
             },
         )
@@ -731,7 +795,7 @@ async def summary_sources(identity, document_id):
           FROM atlas.chunks c JOIN atlas.documents d ON d.tenant_id=c.tenant_id AND d.id=c.document_id
           JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id
           WHERE c.tenant_id=%s AND d.id=%s AND d.status='ready' AND d.lifecycle='active'
-          AND c.version_id=d.current_version_id AND c.pipeline_hash=%s)
+          AND c.version_id=d.current_version_id AND v.publication_status='published' AND v.effective_at<=now() AND c.pipeline_hash=%s)
           SELECT id,document_id,version_id,title,source_key,content,start_offset,end_offset,version_number,source_segments,1.0 similarity
           FROM ordered WHERE (rn-1) %% greatest(1,ceil(total/10.0)::int)=0 ORDER BY rn LIMIT 10""",
                 (identity.tenant_id, document_id, pipeline_hash()),
@@ -750,7 +814,7 @@ async def queries(identity: Identity = Depends(authenticate)):
                 (identity.tenant_id,),
             )
         ).fetchall()
-    from atlas.conversations import safe_message, sources_available
+    from atlas.conversations import safe_message
 
     for row in rows:
         if row.get("conversation_id"):
@@ -768,12 +832,22 @@ async def queries(identity: Identity = Depends(authenticate)):
                 row.update(
                     answer="This conversation is unavailable.", sources=[], status="unavailable"
                 )
-        elif not await sources_available(identity, row["sources"]):
-            row.update(
-                answer="This answer is unavailable because access to its evidence changed.",
-                sources=[],
-                status="unavailable",
+        else:
+            safe = await safe_message(
+                identity,
+                {
+                    "role": "assistant",
+                    "content": row["answer"] or "",
+                    "sources": row["sources"],
+                    "status": "completed"
+                    if row["status"] in {"completed", "uncited", "abstained"}
+                    else row["status"],
+                    "metadata": {"query_status": row["status"]},
+                },
             )
+            row.update(answer=safe["content"], sources=safe["sources"])
+            if safe["status"] == "unavailable":
+                row["status"] = "unavailable"
     return jsonable_encoder(rows)
 
 
@@ -785,7 +859,7 @@ async def overview(identity: Identity = Depends(authenticate)):
             await conn.execute(
                 """SELECT
           (SELECT count(*) FROM atlas.documents WHERE tenant_id=%s AND status!='deleted' AND lifecycle='active') documents,
-          (SELECT count(*) FROM atlas.chunks c JOIN atlas.documents d ON c.tenant_id=d.tenant_id AND c.document_id=d.id WHERE c.tenant_id=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id=d.current_version_id AND c.pipeline_hash=%s) chunks,
+          (SELECT count(*) FROM atlas.chunks c JOIN atlas.documents d ON c.tenant_id=d.tenant_id AND c.document_id=d.id JOIN atlas.document_versions v ON v.tenant_id=c.tenant_id AND v.id=c.version_id WHERE c.tenant_id=%s AND d.status='ready' AND d.lifecycle='active' AND c.version_id=d.current_version_id AND v.publication_status='published' AND v.effective_at<=now() AND c.pipeline_hash=%s) chunks,
           (SELECT count(*) FROM atlas.queries WHERE tenant_id=%s) queries,
           (SELECT avg(duration_ms) FROM atlas.queries WHERE tenant_id=%s AND status='completed') avg_latency_ms,
           (SELECT coalesce(sum(actual_api_cost_usd),0) FROM atlas.usage_ledger WHERE tenant_id=%s) api_spend""",

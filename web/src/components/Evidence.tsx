@@ -28,6 +28,10 @@ export type Evidence = {
   vector_rank?: number | null;
   lexical_rank?: number | null;
   review_due_at?: string;
+  historical?: boolean;
+  publication_status?: string;
+  effective_at?: string;
+  possible_conflict?: boolean;
 };
 export function EvidenceDialog({
   source,
@@ -94,6 +98,7 @@ export function EvidenceDialog({
   ];
   const versionDate =
     preview.data?.version_created_at || source?.version_created_at;
+  const reviewDue = preview.data?.review_due_at ?? source?.review_due_at;
   return (
     <Modal
       open={!!source}
@@ -150,6 +155,18 @@ export function EvidenceDialog({
                 </>
               )}
             </div>
+            {(preview.data.historical ?? source?.historical) === true && (
+              <Notice>
+                This passage is from a historical version. Open the document to
+                review its current published version before acting on it.
+              </Notice>
+            )}
+            {source?.possible_conflict && (
+              <Notice>
+                Another retrieved passage gives a different value for a similar
+                statement. Review both sources and their effective dates.
+              </Notice>
+            )}
             {structured ? (
               <pre className="source-text">
                 {JSON.stringify(preview.data.item || preview.data, null, 2)}
@@ -161,13 +178,12 @@ export function EvidenceDialog({
                 <span>{after}</span>
               </div>
             )}
-            {source?.review_due_at &&
-              new Date(source.review_due_at) < new Date() && (
-                <Notice>
-                  This document is past its scheduled review date. Confirm
-                  operational instructions with its owner.
-                </Notice>
-              )}
+            {!!reviewDue && new Date(String(reviewDue)) < new Date() && (
+              <Notice>
+                This document is past its scheduled review date. Confirm
+                operational instructions with its owner.
+              </Notice>
+            )}
             {source?.document_id && (
               <Link
                 className="text-link"
@@ -210,6 +226,8 @@ export function SourceCard({
         {source.review_due_at && new Date(source.review_due_at) < new Date()
           ? " · Review due"
           : ""}
+        {source.historical ? " · Historical version" : ""}
+        {source.possible_conflict ? " · Possible source conflict" : ""}
       </small>
     </button>
   );

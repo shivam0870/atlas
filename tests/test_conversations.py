@@ -119,9 +119,9 @@ async def test_private_threads_idempotency_and_followup_access_dependencies(
         generated.append(question)
         yield {
             "type": "delta",
-            "text": "The release uses LEAF-COPPER [1]."
+            "text": "The release code is LEAF-COPPER. [1]"
             if sources[0]["id"] == first["id"]
-            else "It uses three replicas [1].",
+            else "The current rollout uses three replicas. [1]",
         }
 
     monkeypatch.setattr(api_module, "retrieve", retrieve)

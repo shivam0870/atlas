@@ -52,16 +52,35 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 2_000_000
     max_pending_jobs: int = 100
     model_timeout: float = 120
+    generation_slots: int = 1
+    generation_queue_size: int = 200
+    generation_queue_timeout: float = 30
+    ingestion_stream_size: int = 100
+    upload_scanner_host: str = "127.0.0.1"
+    upload_scanner_port: int = 53310
+    upload_scanner_timeout: float = 15
+    upload_scanner_max_age_days: int = 7
+    upload_scan_required: bool = True
 
     @model_validator(mode="after")
     def no_paid_services(self):
         if self.paid_providers_enabled or self.global_paid_spend_limit_usd != 0:
             raise ValueError("This installation only permits local, unbilled inference")
+        if not 1 <= self.generation_slots <= 32 or not 1 <= self.generation_queue_size <= 10000:
+            raise ValueError("Generation capacity must be bounded and positive")
+        if not 1 <= self.generation_queue_timeout <= 120:
+            raise ValueError("Generation queue timeout must be between 1 and 120 seconds")
         origin = urlsplit(self.app_url)
         if origin.scheme not in {"http", "https"} or not origin.hostname:
             raise ValueError("APP_URL must be a complete HTTP(S) origin")
         if origin.scheme != "https" and origin.hostname not in {"localhost", "127.0.0.1", "::1"}:
             raise ValueError("Non-local installations require HTTPS for secure account cookies")
+        if not self.upload_scan_required and origin.hostname not in {
+            "localhost",
+            "127.0.0.1",
+            "::1",
+        }:
+            raise ValueError("Malware scanning cannot be disabled for a non-local installation")
         if origin.path not in {"", "/"} or origin.query or origin.fragment:
             raise ValueError("APP_URL must be an origin without a path, query or fragment")
         return self

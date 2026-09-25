@@ -35,11 +35,28 @@ const AdministrationPage = lazy(() =>
     default: module.AdministrationPage,
   })),
 );
+const SourcesPage = lazy(() =>
+  import("./Sources").then((module) => ({ default: module.SourcesPage })),
+);
+const ComparePage = lazy(() =>
+  import("./Compare").then((module) => ({ default: module.ComparePage })),
+);
+const KnowledgeMapPage = lazy(() =>
+  import("./KnowledgeMap").then((module) => ({
+    default: module.KnowledgeMapPage,
+  })),
+);
+const PlaybooksPage = lazy(() =>
+  import("./Playbooks").then((module) => ({ default: module.PlaybooksPage })),
+);
+const BriefingsPage = lazy(() =>
+  import("./Briefings").then((module) => ({ default: module.BriefingsPage })),
+);
 export function WorkspaceRoutes() {
-  const { tenantId } = useWorkspace();
+  const { tenantId, user, organization } = useWorkspace();
   return (
     <Suspense fallback={<Loading label="Opening your workspace…" />}>
-      <Routes>
+      <Routes key={`${user.id}:${tenantId}:${organization.auth_revision}`}>
         <Route index element={<HomePage />} />
         <Route path="ask" element={<ConversationsPage />} />
         <Route path="ask/:conversationId" element={<ConversationsPage />} />
@@ -49,6 +66,11 @@ export function WorkspaceRoutes() {
         <Route path="saved" element={<SavedPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="inventory" element={<InventoryPage />} />
+        <Route path="sources" element={<SourcesPage />} />
+        <Route path="compare" element={<ComparePage />} />
+        <Route path="knowledge-map" element={<KnowledgeMapPage />} />
+        <Route path="playbooks" element={<PlaybooksPage />} />
+        <Route path="briefings" element={<BriefingsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="insights" element={<InsightsPage />} />
         <Route path="quality" element={<QualityPage />} />

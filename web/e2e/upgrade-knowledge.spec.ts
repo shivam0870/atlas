@@ -1,5 +1,5 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
-const origin = "http://127.0.0.1:8100";
+const origin = process.env.ATLAS_BROWSER_URL || "http://127.0.0.1:8100";
 const headers = { "X-Atlas-Client": "console", Origin: origin };
 const password = "Atlas knowledge browser private phrase 5298!"; // pragma: allowlist secret -- disposable test account
 test.use({ screenshot: "off", trace: "off" });

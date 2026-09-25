@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import json
 import time
+from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from psycopg.types.json import Jsonb
@@ -10,6 +11,7 @@ from atlas.chunking import split_text
 from atlas.config import settings
 from atlas.db import transaction
 from atlas.embedding import embed, encoder, model_revision, vector_literal
+from atlas.job_authority import check_job
 from atlas.telemetry import tracer
 
 
@@ -50,6 +52,9 @@ async def create_document(
     traceparent=None,
     space_id=None,
 ):
+    from atlas.upload_safety import scan_upload
+
+    await scan_upload(source_key, content.encode())
     content_hash = hashlib.sha256(content.encode()).hexdigest()
     async with transaction(tenant_id) as conn:
         row = await (
@@ -101,6 +106,7 @@ async def index_document(tenant_id: UUID, document_id: UUID, size=None, overlap=
     coll = await collection(tenant_id, size, overlap)
     fingerprint = coll["pipeline_hash"]
     async with transaction(tenant_id) as conn:
+        await check_job(conn, tenant_id, document_id)
         doc = await (
             await conn.execute(
                 "SELECT * FROM atlas.documents WHERE tenant_id=%s AND id=%s AND status!='deleted' FOR UPDATE",
@@ -179,6 +185,12 @@ async def index_document(tenant_id: UUID, document_id: UUID, size=None, overlap=
                 vectors.update(zip(missing, generated, strict=True))
             async with transaction(tenant_id) as conn:
                 # Serialize the publish step, but never hold this lock during model inference.
+                # Permission changes update this same tenant row. Holding it until
+                # publication commits gives revocation/publication a definite order.
+                await conn.execute(
+                    "SELECT id FROM atlas.tenants WHERE id=%s FOR UPDATE", (tenant_id,)
+                )
+                await check_job(conn, tenant_id, document_id)
                 current = await (
                     await conn.execute(
                         "SELECT id,status,pending_version_id,current_version_id,lifecycle FROM atlas.documents WHERE tenant_id=%s AND id=%s FOR UPDATE",
@@ -238,17 +250,37 @@ async def index_document(tenant_id: UUID, document_id: UUID, size=None, overlap=
                         "UPDATE atlas.document_versions SET status='ready' WHERE tenant_id=%s AND id=%s",
                         (tenant_id, version_id),
                     )
-                    await conn.execute(
-                        "UPDATE atlas.documents SET current_version_id=%s,pending_version_id=NULL,content=%s,content_hash=%s,media_type=%s WHERE tenant_id=%s AND id=%s",
-                        (
-                            version_id,
-                            doc["content"],
-                            version["content_hash"] if version else doc["content_hash"],
-                            version["media_type"] if version else doc["media_type"],
-                            tenant_id,
-                            document_id,
-                        ),
-                    )
+                    publication = await (
+                        await conn.execute(
+                            "SELECT publication_status,effective_at FROM atlas.document_versions WHERE tenant_id=%s AND id=%s FOR UPDATE",
+                            (tenant_id, version_id),
+                        )
+                    ).fetchone()
+                    if (
+                        publication
+                        and publication["publication_status"] == "published"
+                        and publication["effective_at"] <= datetime.now(UTC)
+                    ):
+                        await conn.execute(
+                            "UPDATE atlas.document_versions SET publication_status='superseded' WHERE tenant_id=%s AND document_id=%s AND id<>%s AND publication_status='published' AND effective_at<=now()",
+                            (tenant_id, document_id, version_id),
+                        )
+                        await conn.execute(
+                            "UPDATE atlas.documents SET current_version_id=%s,pending_version_id=NULL,content=%s,content_hash=%s,media_type=%s WHERE tenant_id=%s AND id=%s",
+                            (
+                                version_id,
+                                doc["content"],
+                                version["content_hash"] if version else doc["content_hash"],
+                                version["media_type"] if version else doc["media_type"],
+                                tenant_id,
+                                document_id,
+                            ),
+                        )
+                    else:
+                        await conn.execute(
+                            "UPDATE atlas.documents SET pending_version_id=NULL WHERE tenant_id=%s AND id=%s",
+                            (tenant_id, document_id),
+                        )
                 await conn.execute(
                     "UPDATE atlas.documents SET status='ready',updated_at=now() WHERE tenant_id=%s AND id=%s",
                     (tenant_id, document_id),

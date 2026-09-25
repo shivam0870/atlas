@@ -7,7 +7,7 @@ import {
 import { createHmac } from "node:crypto";
 import { verifiedOwner } from "./helpers";
 test.use({ screenshot: "off", trace: "off", actionTimeout: 30000 });
-const app = "http://127.0.0.1:8100";
+const app = process.env.ATLAS_BROWSER_URL || "http://127.0.0.1:8100";
 const headers = { "X-Atlas-Client": "console", Origin: app };
 const password = "Atlas browser journey private phrase 8472!"; // pragma: allowlist secret -- disposable test account
 async function mailLink(

@@ -591,6 +591,13 @@ async def revoke_integration_key(
 class LimitsBody(BaseModel):
     requests_per_minute: int = Field(ge=1, le=10000)
     monthly_tokens: int = Field(ge=0, le=1_000_000_000)
+    storage_bytes: int | None = Field(default=None, ge=0, le=10_000_000_000_000)
+    uploads_per_day: int | None = Field(default=None, ge=0, le=100000)
+    upload_bytes_per_day: int | None = Field(default=None, ge=0, le=1_000_000_000_000)
+    max_pending_jobs: int | None = Field(default=None, ge=1, le=10000)
+    concurrent_generations: int | None = Field(default=None, ge=1, le=32)
+    queued_generations: int | None = Field(default=None, ge=1, le=1000)
+    queries_per_day: int | None = Field(default=None, ge=0, le=1000000)
 
 
 class MemberLimit(BaseModel):
@@ -627,6 +634,18 @@ async def update_limits(body: LimitsBody, identity: Identity = Depends(authentic
                 (identity.tenant_id, body.requests_per_minute, body.monthly_tokens),
             )
         ).fetchone()
+        extended = body.model_dump(
+            exclude_none=True, exclude={"requests_per_minute", "monthly_tokens"}
+        )
+        if extended:
+            # Keys come exclusively from the validated model, never client-provided SQL.
+            assignments = ",".join(f"{key}=%s" for key in extended)
+            row = await (
+                await conn.execute(
+                    f"UPDATE atlas.tenant_limits SET {assignments} WHERE tenant_id=%s RETURNING *",
+                    (*extended.values(), identity.tenant_id),
+                )
+            ).fetchone()
         await audit(
             conn, identity, "quota.updated", "tenant", identity.tenant_id, body.model_dump()
         )

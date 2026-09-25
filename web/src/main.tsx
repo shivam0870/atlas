@@ -7,6 +7,7 @@ import { AppErrorBoundary } from "./app/ErrorBoundary";
 import "./fonts.css";
 import "./style.css";
 import "./experience.css";
+import "./workbench.css";
 const client = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },

@@ -31,6 +31,17 @@ Run from the repository root:
 .venv/bin/python scripts/public_demo.py stop
 ```
 
+To deploy an updated checkout after its checks pass:
+
+```sh
+npm --prefix web run build
+.venv/bin/python scripts/public_demo.py upgrade
+```
+
+`upgrade` drains this dedicated instance, creates a private snapshot, applies migrations to its database, records a new snapshot, and reopens the HTTPS demo. It leaves the ordinary local API, database and model server running. The launcher validates that all four database roles target the same dedicated public-demo database. API and worker processes do not inherit operator-only database credentials.
+
+The dedicated operator scheduler manages daily snapshots and weekly restore drills under this instance's private directory. Its privileged configuration stays separate from the API and worker. The scanner remains on loopback and is shared with the native app. Restoration uses a new database, retains it for inspection, and records results in the demo's Operations page; it does not switch the running application.
+
 The launcher requires the provisioned private instance, configured ngrok, the existing Docker database/Redis services and native Ollama. `start` sets the actual public `APP_URL` before starting the API and worker, and starts `caffeinate` to prevent idle sleep. `stop` signals only the processes whose recorded identity still matches this dedicated instance. It preserves the ordinary local app and all data. After a reboot, start the local dependencies first with `python3 scripts/local.py start`, then start the public demo.
 
 This launcher manages the configured reference Mac; it does not provision new cloud hosts or reconstruct private credentials from a Git clone. Never commit `.env`, SMTP settings, ngrok credentials, backups or test-account passwords.

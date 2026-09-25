@@ -33,7 +33,7 @@ async def test_newest_history_cursor_full_export_and_revoked_old_evidence(
         "conversation"
     ]
     other = (await create_conversation(ConversationCreate(), principal))["conversation"]
-    hidden = source_document(ws.tenant, "Older sensitive evidence")
+    hidden = source_document(ws.tenant, "Private older answer.")
     ordered = []
     with psycopg.connect(settings.database_admin_url) as conn:
         started = datetime.now(UTC) - timedelta(days=1)
@@ -48,7 +48,7 @@ async def test_newest_history_cursor_full_export_and_revoked_old_evidence(
                     thread["id"],
                     principal.user_id,
                     "assistant" if index == 0 else "user",
-                    "Private older answer" if index == 0 else f"Message {index:04d}",
+                    "Private older answer. [1]" if index == 0 else f"Message {index:04d}",
                     Jsonb([hidden] if index == 0 else []),
                     started + timedelta(seconds=index),
                 ),

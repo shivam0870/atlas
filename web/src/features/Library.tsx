@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { ApiError, api, json } from "../api/client";
 import { EffectiveAccess, type EffectivePrincipal } from "./EffectiveAccess";
+import { PublicationControls } from "./PublicationControls";
 import { useScopedQueryKey, useWorkspace } from "../app/context";
 import {
   Badge,
@@ -59,6 +60,8 @@ type Document = {
   pending_status?: string;
   current_version_id: string | null;
   pending_version_id: string | null;
+  publication_status?: string;
+  effective_at?: string | null;
 };
 type Segment = { start: number; end: number; page?: number; section?: string };
 type Version = {
@@ -70,6 +73,8 @@ type Version = {
   filename: string;
   created_at: string;
   source_segments: Segment[];
+  publication_status?: string;
+  effective_at?: string | null;
 };
 type Grant = {
   subject_type: "user" | "team" | "service";
@@ -214,6 +219,8 @@ export function LibraryPage() {
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [textTitle, setTextTitle] = useState("");
   const [textContent, setTextContent] = useState("");
+  const [uploadPublication, setUploadPublication] = useState("published");
+  const [uploadEffective, setUploadEffective] = useState("");
   const [replacement, setReplacement] = useState<string | null>(null);
   const sequence = useRef(0);
   const transferController = useRef(new AbortController());
@@ -306,8 +313,14 @@ export function LibraryPage() {
     updatedSince,
   ]);
   useEffect(() => {
-    setVersionId(detail.data?.current_version_id || "");
-  }, [detail.data?.current_version_id]);
+    setVersionId(
+      searchParams.get("version") || detail.data?.current_version_id || "",
+    );
+  }, [
+    detail.data?.current_version_id,
+    documentId,
+    searchParams.get("version"),
+  ]);
   async function refresh() {
     await client.invalidateQueries({
       queryKey: ["workspace", user.id, tenantId],
@@ -356,6 +369,12 @@ export function LibraryPage() {
       try {
         const form = new FormData();
         form.append("file", item.file);
+        form.append("publication_status", uploadPublication);
+        if (uploadEffective)
+          form.append(
+            "effective_at",
+            new Date(`${uploadEffective}T00:00:00`).toISOString(),
+          );
         if (spaceId) form.append("space_id", spaceId);
         if (replacement) form.append("replace_document_id", replacement);
         await api("/library/upload", {
@@ -911,6 +930,26 @@ export function LibraryPage() {
               ))}
             </select>
           </label>
+          <div className="workbench-columns">
+            <label className="field">
+              <span>Publication after indexing</span>
+              <select
+                value={uploadPublication}
+                disabled={busy}
+                onChange={(event) => setUploadPublication(event.target.value)}
+              >
+                <option value="published">Publish when ready</option>
+                <option value="draft">Keep as draft for review</option>
+              </select>
+            </label>
+            <Field
+              label="Effective date (optional)"
+              type="date"
+              value={uploadEffective}
+              disabled={busy}
+              onChange={(event) => setUploadEffective(event.target.value)}
+            />
+          </div>
           <div
             className="empty-state"
             onDragOver={(e) => e.preventDefault()}
@@ -949,6 +988,14 @@ export function LibraryPage() {
                         const form = new FormData();
                         form.append("file", item.file);
                         form.append("replace_document_id", item.duplicateId!);
+                        form.append("publication_status", uploadPublication);
+                        if (uploadEffective)
+                          form.append(
+                            "effective_at",
+                            new Date(
+                              `${uploadEffective}T00:00:00`,
+                            ).toISOString(),
+                          );
                         if (spaceId) form.append("space_id", spaceId);
                         await api("/library/upload", {
                           tenantId,
@@ -1014,6 +1061,12 @@ export function LibraryPage() {
                         title: textTitle,
                         content: textContent,
                         space_id: spaceId || null,
+                        publication_status: uploadPublication,
+                        effective_at: uploadEffective
+                          ? new Date(
+                              `${uploadEffective}T00:00:00`,
+                            ).toISOString()
+                          : null,
                       }),
                     });
                     setTextTitle("");
@@ -1142,6 +1195,7 @@ export function LibraryPage() {
                   {versions.data?.map((v) => (
                     <option value={v.id} key={v.id}>
                       Version {v.number} · {v.status}
+                      {v.publication_status ? ` · ${v.publication_status}` : ""}
                       {v.id === document.current_version_id ? " · Current" : ""}
                     </option>
                   ))}
@@ -1259,6 +1313,25 @@ export function LibraryPage() {
                   </Button>
                 )}
               </div>
+              {version.data && (
+                <PublicationControls
+                  documentId={document.id}
+                  version={version.data}
+                />
+              )}
+              {versionId && versionId !== document.current_version_id && (
+                <div className="notice" role="status">
+                  You are viewing a historical or unpublished version. Answers
+                  use the current effective published version.
+                </div>
+              )}
+              {document.review_due_at &&
+                new Date(document.review_due_at) < new Date() && (
+                  <div className="notice" role="status">
+                    This document is overdue for review. Check with its owner
+                    before relying on it.
+                  </div>
+                )}
               {version.isPending && versionId ? (
                 <Loading />
               ) : (

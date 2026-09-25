@@ -1,6 +1,6 @@
 import { verifiedOwner } from "./helpers";
 import { test, expect } from "@playwright/test";
-const origin = "http://127.0.0.1:8100";
+const origin = process.env.ATLAS_BROWSER_URL || "http://127.0.0.1:8100";
 const headers = { "X-Atlas-Client": "console", Origin: origin };
 test.use({ screenshot: "off", trace: "off" });
 

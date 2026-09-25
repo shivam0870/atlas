@@ -497,13 +497,15 @@ export function ConversationsPage() {
             }
             if (data.stage)
               setStage(
-                data.stage === "generating"
-                  ? "Writing your answer"
-                  : data.stage === "agent"
-                    ? "Checking records and documents"
-                    : data.stage === "cached"
-                      ? "Opening a verified cached answer"
-                      : "Finding sources",
+                data.stage === "verifying"
+                  ? "Checking the answer against source passages"
+                  : data.stage === "generating"
+                    ? "Writing your answer"
+                    : data.stage === "agent"
+                      ? "Checking records and documents"
+                      : data.stage === "cached"
+                        ? "Opening a verified cached answer"
+                        : "Finding sources",
               );
           } else if (event === "delta")
             update((m) => ({ ...m, content: m.content + data.text }));

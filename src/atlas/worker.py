@@ -17,21 +17,35 @@ from atlas.config import settings
 from atlas.db import transaction
 from atlas.evaluation import process_evaluation_job
 from atlas.ingestion import index_document
+from atlas.job_authority import JobCancelled, ingestion_job
 from atlas.serving import cache_redis, redis
 from atlas.telemetry import indexed, queue_depth, setup, tracer
 
 STREAM = "atlas:ingestion"
 GROUP = "indexers"
 log = logging.getLogger("atlas.worker")
+BOUNDED_DISPATCH = """
+if redis.call('XLEN',KEYS[1])>=tonumber(ARGV[1]) then return false end
+return redis.call('XADD',KEYS[1],'*','tenant_id',ARGV[2],'job_id',ARGV[3])
+"""
 
 
 async def dispatch():
+    if await redis.xlen(STREAM) >= settings.ingestion_stream_size:
+        return 0
     async with db.pool.connection() as conn, conn.transaction():
         rows = await (await conn.execute("SELECT * FROM atlas.dispatch_outbox()")).fetchall()
         for row in rows:
-            await redis.xadd(
-                STREAM, {"tenant_id": str(row["tenant_id"]), "job_id": str(row["job_id"])}
+            published = await redis.eval(
+                BOUNDED_DISPATCH,
+                1,
+                STREAM,
+                settings.ingestion_stream_size,
+                str(row["tenant_id"]),
+                str(row["job_id"]),
             )
+            if not published:
+                continue
             await conn.execute(
                 "SELECT set_config('app.tenant_id',%s,true)", (str(row["tenant_id"]),)
             )
@@ -52,6 +66,12 @@ async def dispatch_evaluation(owner):
 
 
 async def maintenance():
+    from atlas.operations import monitor_runtime
+    from atlas.workflows import workflow_tick
+
+    await monitor_runtime()
+    await workflow_tick()
+    await cleanup_permission_caches()
     async with db.pool.connection() as conn, conn.transaction():
         await conn.execute("SELECT atlas.deliver_maintenance_notifications()")
         job = await (await conn.execute("SELECT * FROM atlas.process_retention()")).fetchone()
@@ -67,6 +87,25 @@ async def maintenance():
                 await cache_redis.delete(key)
         async with db.pool.connection() as conn:
             await conn.execute("SELECT atlas.finish_retention(%s)", (job["job_id"],))
+
+
+async def cleanup_permission_caches():
+    # New revisions immediately prevent cache reuse in the request path. This
+    # durable outbox additionally erases old payloads and survives Redis downtime.
+    async with db.pool.connection() as conn:
+        pending = await (
+            await conn.execute("SELECT * FROM atlas.pending_permission_cache_invalidations()")
+        ).fetchall()
+    for row in pending:
+        async for key in cache_redis.scan_iter(
+            match=f"atlas:answer:{row['tenant_id']}:*", count=100
+        ):
+            await cache_redis.delete(key)
+        async with db.pool.connection() as conn:
+            await conn.execute(
+                "SELECT atlas.ack_permission_cache_invalidation(%s,%s)",
+                (row["tenant_id"], row["revision"]),
+            )
 
 
 async def heartbeat(tenant, job, owner):
@@ -88,7 +127,7 @@ async def process(message_id, payload, owner):
                 (tenant, job),
             )
         ).fetchone()
-        if not row or row["status"] in {"completed", "dead"}:
+        if not row or row["status"] in {"completed", "dead", "cancelled"}:
             await redis.xack(STREAM, GROUP, message_id)
             await redis.xdel(STREAM, message_id)
             return
@@ -101,6 +140,7 @@ async def process(message_id, payload, owner):
     if not claimed:
         return
     beat = asyncio.create_task(heartbeat(tenant, job, owner))
+    job_token = ingestion_job.set(claimed)
     try:
         context = propagate.extract(
             {"traceparent": claimed["traceparent"]} if claimed["traceparent"] else {}
@@ -113,15 +153,21 @@ async def process(message_id, payload, owner):
                 indexed.add(1)
         async with transaction(tenant) as conn:
             await conn.execute(
-                "UPDATE atlas.ingestion_jobs SET status='completed',result=%s,lease_until=NULL,updated_at=now() WHERE tenant_id=%s AND id=%s AND owner=%s",
+                "UPDATE atlas.ingestion_jobs SET status='completed',result=%s,lease_until=NULL,updated_at=now() WHERE tenant_id=%s AND id=%s AND owner=%s AND status='running'",
                 (Jsonb(result), tenant, job, owner),
             )
     except Exception as exc:
         dead = claimed["attempts"] >= 3 or isinstance(exc, ValueError)
         async with transaction(tenant) as conn:
             await conn.execute(
-                "UPDATE atlas.ingestion_jobs SET status=%s,error_code=%s,lease_until=NULL,updated_at=now() WHERE tenant_id=%s AND id=%s AND owner=%s",
-                ("dead" if dead else "retry", type(exc).__name__, tenant, job, owner),
+                "UPDATE atlas.ingestion_jobs SET status=%s,error_code=%s,lease_until=NULL,updated_at=now() WHERE tenant_id=%s AND id=%s AND owner=%s AND status='running'",
+                (
+                    "cancelled" if isinstance(exc, JobCancelled) else "dead" if dead else "retry",
+                    type(exc).__name__,
+                    tenant,
+                    job,
+                    owner,
+                ),
             )
             if not dead:
                 await conn.execute(
@@ -139,6 +185,7 @@ async def process(message_id, payload, owner):
             extra={"fields": {"job_id": str(job), "error_code": type(exc).__name__}},
         )
     finally:
+        ingestion_job.reset(job_token)
         beat.cancel()
         await asyncio.gather(beat, return_exceptions=True)
     await redis.xack(STREAM, GROUP, message_id)

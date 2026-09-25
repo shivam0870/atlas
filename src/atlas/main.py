@@ -22,8 +22,10 @@ from atlas.evaluation import router as eval_router
 from atlas.knowledge import router as knowledge_router
 from atlas.mcp_server import AuthenticatedMCP
 from atlas.mcp_server import server as mcp_server
+from atlas.operations import router as operations_router
 from atlas.organizations import router as organizations_router
 from atlas.telemetry import logger, requests, setup, tracer
+from atlas.workflows import router as workflows_router
 
 redis = Redis.from_url(settings.redis_url, decode_responses=True)
 
@@ -32,6 +34,7 @@ redis = Redis.from_url(settings.redis_url, decode_responses=True)
 async def lifespan(app: FastAPI):
     setup()
     await pool.open(wait=True)
+    await db.verify_application_role()
     async with mcp_server.session_manager.run():
         yield
     await pool.close()
@@ -49,6 +52,8 @@ app.include_router(knowledge_router)
 app.include_router(administration_router)
 app.include_router(conversations_router)
 app.include_router(discovery_router)
+app.include_router(workflows_router)
+app.include_router(operations_router)
 app.mount("/mcp", AuthenticatedMCP())
 
 

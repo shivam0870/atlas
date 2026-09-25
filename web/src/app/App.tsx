@@ -29,6 +29,11 @@ import {
   Users,
   X,
   Database,
+  FolderSync,
+  ArrowLeftRight,
+  Network,
+  CheckSquare,
+  Newspaper,
 } from "lucide-react";
 import { api } from "../api/client";
 import { useSession } from "../auth/session";
@@ -194,6 +199,11 @@ function WorkspaceShell() {
     { to: "/search", label: "Search", icon: Search },
     { to: "/saved", label: "Saved", icon: Bookmark },
     { to: "/inventory", label: "Inventory", icon: Database },
+    { to: "/sources", label: "Sources", icon: FolderSync },
+    { to: "/compare", label: "Compare", icon: ArrowLeftRight },
+    { to: "/knowledge-map", label: "Knowledge Map", icon: Network },
+    { to: "/playbooks", label: "Playbooks", icon: CheckSquare },
+    { to: "/briefings", label: "Briefings", icon: Newspaper },
   ];
   const management = [
     { to: "/people", label: "People & teams", icon: Users },

@@ -31,23 +31,40 @@ def healthy(url):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["start", "stop", "status", "restart"])
+    parser.add_argument(
+        "--services",
+        nargs="+",
+        choices=["ollama", "api", "worker", "operator-scheduler"],
+        help="Operate only on selected native services; preserve other running processes",
+    )
     args = parser.parse_args()
     os.chdir(ROOT)
     state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    selected = set(args.services or ("ollama", "api", "worker", "operator-scheduler"))
     if args.action in {"stop", "restart"}:
         for name, process in reversed(list(state.items())):
+            if name not in selected:
+                continue
             if identity(process["pid"]) == process["identity"]:
                 os.killpg(process["pid"], signal.SIGTERM)
                 print("Stopping " + name)
         for _ in range(35):
-            if not any(identity(p["pid"]) == p["identity"] for p in state.values()):
+            if not any(
+                identity(p["pid"]) == p["identity"] for name, p in state.items() if name in selected
+            ):
                 break
             time.sleep(1)
-        state = {name: p for name, p in state.items() if identity(p["pid"]) == p["identity"]}
+        state = {
+            name: p
+            for name, p in state.items()
+            if name not in selected or identity(p["pid"]) == p["identity"]
+        }
         STATE.write_text(json.dumps(state))
-        if state:
+        if any(name in selected for name in state):
             raise SystemExit("A worker is finishing an in-flight document. Retry after it drains.")
     if args.action in {"start", "restart"}:
+        if any((ROOT / ".local/clamav/database").glob("daily.*")):
+            subprocess.run(["python3", "scripts/scanner.py", "start"], check=True)
         subprocess.run(
             ["docker-compose", "up", "-d", "postgres", "redis", "cache", "collector", "mailpit"],
             check=True,
@@ -82,8 +99,14 @@ def main():
                 "http://127.0.0.1:8100/ready",
             ),
             "worker": ([str(ROOT / ".venv/bin/python"), "-m", "atlas.worker"], None),
+            "operator-scheduler": (
+                [str(ROOT / ".venv/bin/python"), "scripts/operations_schedule.py"],
+                None,
+            ),
         }
         for name, (command, url) in programs.items():
+            if name not in selected:
+                continue
             if name in state and identity(state[name]["pid"]) == state[name]["identity"]:
                 continue
             if url and healthy(url):

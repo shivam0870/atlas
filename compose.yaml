@@ -1,5 +1,18 @@
 name: atlas-rag
 services:
+  clamav:
+    image: clamav/clamav-debian:1.5.4
+    profiles: [security]
+    ports:
+    - 127.0.0.1:53310:3310
+    volumes:
+    - scanner_data:/var/lib/clamav
+    healthcheck:
+      test: [CMD, clamdscan, --ping, '3']
+      interval: 30s
+      timeout: 10s
+      start_period: 180s
+      retries: 5
   mailpit:
     image: axllent/mailpit:v1.27.8
     ports:
@@ -100,6 +113,9 @@ services:
       CACHE_REDIS_URL: redis://cache:6379/0
       OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://ollama:11434}
       LOCAL_CONSOLE: 'false'
+      UPLOAD_SCANNER_HOST: clamav
+      UPLOAD_SCANNER_PORT: '3310'
+      UPLOAD_SCAN_REQUIRED: 'true'
       OTEL_ENABLED: 'true'
       OTEL_ENDPOINT: http://collector:4318/v1/traces
     ports:
@@ -123,6 +139,9 @@ services:
     build: .
     environment:
       WORKER_DATABASE_URL: postgresql://atlas_worker:${WORKER_DB_PASSWORD}@postgres:5432/atlas
+      UPLOAD_SCANNER_HOST: clamav
+      UPLOAD_SCANNER_PORT: '3310'
+      UPLOAD_SCAN_REQUIRED: 'true'
       DATABASE_URL: postgresql://atlas_app:${APP_DB_PASSWORD}@postgres:5432/atlas
       IDENTITY_DATABASE_URL: postgresql://atlas_identity:${IDENTITY_DB_PASSWORD}@postgres:5432/atlas
       MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Run scripts/configure.py}
@@ -175,6 +194,7 @@ services:
       ollama:
         condition: service_started
 volumes:
+  scanner_data: null
   mailpit_data: null
   model_data: null
   console_data: null

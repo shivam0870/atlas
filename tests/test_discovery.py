@@ -36,7 +36,7 @@ async def test_saved_answer_is_redacted_after_dependency_access_loss(database, r
     message_id = uuid4()
     with psycopg.connect(settings.database_admin_url) as conn:
         conn.execute(
-            "INSERT INTO atlas.messages(tenant_id,id,conversation_id,user_id,role,content,sources,metadata) VALUES(%s,%s,%s,%s,'assistant','Sensitive answer [1].',%s,%s)",
+            "INSERT INTO atlas.messages(tenant_id,id,conversation_id,user_id,role,content,sources,metadata) VALUES(%s,%s,%s,%s,'assistant','Unrestricted current evidence. [1]',%s,%s)",
             (
                 ws.tenant,
                 message_id,
@@ -48,7 +48,9 @@ async def test_saved_answer_is_redacted_after_dependency_access_loss(database, r
         )
     saved = await save_bookmark(BookmarkBody(kind="message", resource_id=message_id), principal)
     assert saved["bookmark"]["available"]
-    assert (await bookmarks(principal))["items"][0]["content"] == "Sensitive answer [1]."
+    assert (await bookmarks(principal))["items"][0][
+        "content"
+    ] == "Unrestricted current evidence. [1]"
     with psycopg.connect(settings.database_admin_url) as conn:
         conn.execute(
             "UPDATE atlas.documents SET restricted=true WHERE tenant_id=%s AND id=%s",

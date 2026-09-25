@@ -1,6 +1,7 @@
 """Private conversations and fresh authorization checks for stored evidence."""
 
 import json
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
@@ -170,12 +171,69 @@ def dependencies(message: dict) -> list[dict]:
     )
 
 
+async def refresh_source_metadata(identity: Identity, sources: list[dict]) -> list[dict] | None:
+    """Rehydrate version freshness without replacing the historical evidence text."""
+    documents = {
+        UUID(str(source["document_id"])) for source in sources if source.get("document_id")
+    }
+    if not documents:
+        return sources
+    version_ids = [
+        UUID(str(source["version_id"]))
+        for source in sources
+        if source.get("document_id") and source.get("version_id")
+    ]
+    async with transaction(identity.tenant_id) as conn:
+        rows = await (
+            await conn.execute(
+                """SELECT d.id document_id,d.current_version_id,d.review_due_at,d.updated_at,
+                v.id version_id,v.publication_status,v.effective_at
+                FROM atlas.documents d JOIN atlas.document_versions v
+                ON v.tenant_id=d.tenant_id AND v.document_id=d.id
+                WHERE d.id=ANY(%s) AND d.lifecycle='active' AND v.status='ready'
+                AND (v.id=ANY(%s::uuid[]) OR v.id=d.current_version_id)""",
+                (list(documents), version_ids),
+            )
+        ).fetchall()
+    versions = {(str(row["document_id"]), str(row["version_id"])): row for row in rows}
+    result = []
+    for source in sources:
+        if not source.get("document_id"):
+            result.append(source)
+            continue
+        row = versions.get((str(source["document_id"]), str(source.get("version_id"))))
+        if row is None:
+            # Legacy evidence without an exact version can remain readable after
+            # permission checks, but never claims to be the current version.
+            if source.get("version_id"):
+                return None
+            result.append({**source, "historical": True})
+            continue
+        due = row["review_due_at"]
+        result.append(
+            {
+                **source,
+                "historical": row["current_version_id"] != row["version_id"]
+                or row["publication_status"] != "published",
+                "publication_status": row["publication_status"],
+                "effective_at": row["effective_at"].isoformat(),
+                "review_due_at": due.isoformat() if due else None,
+                "stale": bool(due and due <= datetime.now(UTC)),
+                "document_updated_at": row["updated_at"].isoformat(),
+            }
+        )
+    return result
+
+
 async def safe_message(identity: Identity, row: dict) -> dict:
     result = dict(row)
+    refreshed = None
+    if result["role"] == "assistant" and await sources_available(identity, dependencies(result)):
+        refreshed = await refresh_source_metadata(identity, result.get("sources") or [])
     if result["role"] == "assistant" and (
         result["status"] == "unavailable"
         or result.get("metadata", {}).get("access_revoked")
-        or not await sources_available(identity, dependencies(result))
+        or refreshed is None
     ):
         diagnostics = result.get("metadata") or {}
         result.update(
@@ -192,12 +250,29 @@ async def safe_message(identity: Identity, row: dict) -> dict:
             },
         )
     else:
+        if refreshed is not None:
+            result["sources"] = refreshed
         # Internal dependency bodies are never returned to the browser.
         result["metadata"] = {
             key: value
             for key, value in (result.get("metadata") or {}).items()
             if key != "dependency_sources"
         }
+        if (
+            result["role"] == "assistant"
+            and result["status"] == "completed"
+            and result["metadata"].get("query_status") != "abstained"
+        ):
+            from atlas.evidence_safety import evidence_fallback, verify_answer
+
+            check = verify_answer(result["content"], result.get("sources") or [])
+            if not check.supported:
+                result["content"] = evidence_fallback(result.get("sources") or [])
+                result["metadata"].update(
+                    verification_method=check.method,
+                    unsupported_claims=check.rejected,
+                    verification_state="withheld",
+                )
     return result
 
 
@@ -524,6 +599,10 @@ async def prepare_turn(
             if row["status"] != "completed" or not await sources_available(
                 identity, dependencies(row)
             ):
+                continue
+            from atlas.evidence_safety import verify_answer
+
+            if not verify_answer(row["content"], row.get("sources") or []).supported:
                 continue
             references = [
                 {k: source[k] for k in ["id", "document_id", "version_id", "kind"] if k in source}

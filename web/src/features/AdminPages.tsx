@@ -18,6 +18,7 @@ import { api, json } from "../api/client";
 import { useScopedQueryKey, useWorkspace } from "../app/context";
 import { LegacyArchive } from "./LegacyArchive";
 import { MonthlyQuota } from "./WorkspaceMetrics";
+import { OperationsPanel } from "./Operations";
 import {
   Badge,
   Button,
@@ -1539,6 +1540,13 @@ type Limits = {
     requests_per_minute: number;
     monthly_tokens: number;
     monthly_usd: number;
+    storage_bytes?: number;
+    uploads_per_day?: number;
+    upload_bytes_per_day?: number;
+    max_pending_jobs?: number;
+    concurrent_generations?: number;
+    queued_generations?: number;
+    queries_per_day?: number;
   };
   members: {
     user_id: string;
@@ -1582,6 +1590,15 @@ export function AdministrationPage() {
   });
   const [rpm, setRpm] = useState(60);
   const [tokens, setTokens] = useState(1000000);
+  const [resourceLimits, setResourceLimits] = useState({
+    storage_bytes: 1073741824,
+    uploads_per_day: 200,
+    upload_bytes_per_day: 524288000,
+    max_pending_jobs: 100,
+    concurrent_generations: 1,
+    queued_generations: 8,
+    queries_per_day: 10000,
+  });
   const [member, setMember] = useState<Limits["members"][number] | null>(null);
   const [memberTokens, setMemberTokens] = useState("");
   const [canEvaluate, setCanEvaluate] = useState(false);
@@ -1590,6 +1607,15 @@ export function AdministrationPage() {
     if (limits.data) {
       setRpm(limits.data.limits.requests_per_minute);
       setTokens(limits.data.limits.monthly_tokens);
+      setResourceLimits(
+        (current) =>
+          Object.fromEntries(
+            Object.entries(current).map(([key, value]) => [
+              key,
+              limits.data.limits[key as keyof Limits["limits"]] ?? value,
+            ]),
+          ) as typeof current,
+      );
     }
   }, [limits.data]);
   if (!canManage) return <Forbidden />;
@@ -1600,6 +1626,13 @@ export function AdministrationPage() {
         description="Usage boundaries and an accountable history of company changes."
       />
       <div className="page-tabs">
+        <button
+          className="link-button"
+          aria-pressed={tab === "operations"}
+          onClick={() => setParams({ tab: "operations" })}
+        >
+          Operations & recovery
+        </button>
         <button
           className="link-button"
           aria-pressed={tab === "limits"}
@@ -1626,7 +1659,9 @@ export function AdministrationPage() {
         error={!member ? error || limits.error || audit.error : null}
       />
       {message && <Notice>{message}</Notice>}
-      {tab === "legacy" ? (
+      {tab === "operations" ? (
+        <OperationsPanel />
+      ) : tab === "legacy" ? (
         <LegacyArchive />
       ) : tab === "limits" ? (
         <>
@@ -1650,6 +1685,7 @@ export function AdministrationPage() {
                       body: json({
                         requests_per_minute: rpm,
                         monthly_tokens: tokens,
+                        ...resourceLimits,
                       }),
                     });
                     setMessage("Company limits updated.");
@@ -1673,6 +1709,58 @@ export function AdministrationPage() {
                   onChange={(e) => setTokens(Number(e.target.value))}
                   required
                 />
+                <h3>Storage and workload boundaries</h3>
+                <p className="muted">
+                  These limits apply across uploads, ingestion, chat, and
+                  scheduled work for this company.
+                </p>
+                {(
+                  [
+                    ["storage_bytes", "Document storage (bytes)", 0, undefined],
+                    ["uploads_per_day", "Uploads per day", 0, undefined],
+                    [
+                      "upload_bytes_per_day",
+                      "Upload volume per day (bytes)",
+                      0,
+                      undefined,
+                    ],
+                    [
+                      "max_pending_jobs",
+                      "Pending ingestion jobs",
+                      1,
+                      undefined,
+                    ],
+                    [
+                      "concurrent_generations",
+                      "Concurrent answer generations",
+                      1,
+                      32,
+                    ],
+                    [
+                      "queued_generations",
+                      "Queued answer generations",
+                      1,
+                      1000,
+                    ],
+                    ["queries_per_day", "Queries per day", 0, undefined],
+                  ] as const
+                ).map(([key, label, min, max]) => (
+                  <Field
+                    key={key}
+                    label={label}
+                    type="number"
+                    min={min}
+                    max={max}
+                    value={resourceLimits[key]}
+                    onChange={(event) =>
+                      setResourceLimits({
+                        ...resourceLimits,
+                        [key]: Number(event.target.value),
+                      })
+                    }
+                    required
+                  />
+                ))}
                 <Button busy={busy}>Save company limits</Button>
               </form>
             )}

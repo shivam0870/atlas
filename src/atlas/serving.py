@@ -45,12 +45,20 @@ async def rate_limit(tenant: UUID, maximum: int):
         allowed, retry = await redis.eval(
             RATE_SCRIPT, 1, f"atlas:rate:{tenant}", maximum, str(uuid4())
         )
+
     except Exception as exc:
         raise HTTPException(503, "Rate-limit service is unavailable; please retry shortly") from exc
     if not allowed:
         raise HTTPException(
             429, "Workspace request limit reached", headers={"Retry-After": str(retry)}
         )
+
+
+async def query_limit(tenant: UUID):
+    async with transaction(tenant) as conn:
+        charged = await (await conn.execute("SELECT atlas.charge_query() allowed")).fetchone()
+        if not charged or not charged["allowed"]:
+            raise HTTPException(429, "Workspace daily query quota reached")
 
 
 async def reserve(tenant: UUID, operation: UUID, tokens=8832):
@@ -157,7 +165,7 @@ def cache_namespace(tenant, collection, revision, mode, top_k, rerank, scopes):
                 rerank,
                 sorted(scopes),
                 settings.generation_model,
-                "prompt-v2",
+                "prompt-v3-literal-verified",
                 settings.relevance_floor,
                 settings.rrf_constant,
                 settings.vector_weight,
@@ -219,68 +227,66 @@ async def cache_store(
 async def enqueue_conn(conn, tenant: UUID, document_id: UUID, traceparent: str | None = None):
     from atlas.ingestion import pipeline_hash
 
+    await conn.execute("SELECT id FROM atlas.tenants WHERE id=%s FOR UPDATE", (tenant,))
     document = await (
         await conn.execute(
-            "SELECT coalesce(pending_version_id,current_version_id)::text version FROM atlas.documents WHERE tenant_id=%s AND id=%s",
+            "SELECT coalesce(pending_version_id,current_version_id)::text version,status,pending_version_id,atlas.can_document(id,true) allowed FROM atlas.documents WHERE tenant_id=%s AND id=%s AND lifecycle='active' AND status!='deleted'",
             (tenant, document_id),
         )
     ).fetchone()
-    if not document:
-        raise HTTPException(404, "Document unavailable")
+    if not document or not document["allowed"]:
+        raise HTTPException(404, "Document unavailable for indexing")
     key = str(document_id) + ":" + (document["version"] or "legacy") + ":" + pipeline_hash()
-    await conn.execute("SELECT id FROM atlas.tenants WHERE id=%s FOR UPDATE", (tenant,))
     existing = await (
         await conn.execute(
-            "SELECT id FROM atlas.ingestion_jobs WHERE tenant_id=%s AND idempotency_key=%s",
-            (tenant, key),
+            "SELECT * FROM atlas.ingestion_jobs WHERE tenant_id=%s AND document_id=%s AND (idempotency_key=%s OR starts_with(idempotency_key,%s)) ORDER BY created_at DESC,id DESC LIMIT 1",
+            (tenant, document_id, key, key + ":retry:"),
         )
     ).fetchone()
-    if not existing:
-        pending = await (
-            await conn.execute(
-                "SELECT count(*) n FROM atlas.ingestion_jobs WHERE tenant_id=%s AND status IN ('queued','running','retry')",
-                (tenant,),
-            )
-        ).fetchone()
-        if pending["n"] >= settings.max_pending_jobs:
-            raise HTTPException(
-                429,
-                "Workspace indexing queue is full; try again after pending documents finish",
-                headers={"Retry-After": "10"},
-            )
-
+    if existing and (
+        existing["status"] in {"queued", "running", "retry"}
+        or (
+            existing["status"] == "completed"
+            and document["status"] == "ready"
+            and not document["pending_version_id"]
+        )
+    ):
+        return {"job_id": str(existing["id"]), "job_status": existing["status"]}
+    tenant_limits = await (
+        await conn.execute(
+            "SELECT max_pending_jobs FROM atlas.tenant_limits WHERE tenant_id=%s", (tenant,)
+        )
+    ).fetchone()
+    pending = await (
+        await conn.execute(
+            "SELECT atlas.pending_job_count() n",
+        )
+    ).fetchone()
+    maximum = min(
+        settings.max_pending_jobs,
+        tenant_limits["max_pending_jobs"] if tenant_limits else settings.max_pending_jobs,
+    )
+    if pending["n"] >= maximum:
+        raise HTTPException(
+            429,
+            "Workspace indexing queue is full; try again after pending documents finish",
+            headers={"Retry-After": "10"},
+        )
+    # Retrying is a new, attributable authorization decision. Keep the original
+    # immutable job and its failure evidence; do not inherit a revoked submitter.
+    if existing:
+        key += ":retry:" + str(uuid4())
     row = await (
         await conn.execute(
-            "INSERT INTO atlas.ingestion_jobs(tenant_id,id,document_id,idempotency_key,traceparent) VALUES(%s,%s,%s,%s,%s) ON CONFLICT(tenant_id,idempotency_key) DO UPDATE SET idempotency_key=excluded.idempotency_key RETURNING *",
+            "INSERT INTO atlas.ingestion_jobs(tenant_id,id,document_id,idempotency_key,traceparent) VALUES(%s,%s,%s,%s,%s) RETURNING *",
             (tenant, uuid4(), document_id, key, traceparent),
         )
     ).fetchone()
     assert row
-    doc = await (
-        await conn.execute(
-            "SELECT status,pending_version_id FROM atlas.documents WHERE tenant_id=%s AND id=%s",
-            (tenant, document_id),
-        )
-    ).fetchone()
-    if (
-        row["status"] in {"completed", "dead"}
-        and doc
-        and (doc["status"] == "pending" or doc["pending_version_id"])
-    ):
-        await conn.execute(
-            "UPDATE atlas.ingestion_jobs SET status='queued',attempts=0,error_code=NULL WHERE tenant_id=%s AND id=%s",
-            (tenant, row["id"]),
-        )
-        row["status"], row["attempts"] = "queued", 0
-        await conn.execute(
-            "INSERT INTO atlas.outbox(tenant_id,id,job_id) VALUES(%s,%s,%s)",
-            (tenant, uuid4(), row["id"]),
-        )
-    elif row["status"] == "queued" and row["attempts"] == 0:
-        await conn.execute(
-            "INSERT INTO atlas.outbox(tenant_id,id,job_id) VALUES(%s,%s,%s) ON CONFLICT DO NOTHING",
-            (tenant, row["id"], row["id"]),
-        )
+    await conn.execute(
+        "INSERT INTO atlas.outbox(tenant_id,id,job_id) VALUES(%s,%s,%s)",
+        (tenant, row["id"], row["id"]),
+    )
     return {"job_id": str(row["id"]), "job_status": row["status"]}
 
 
